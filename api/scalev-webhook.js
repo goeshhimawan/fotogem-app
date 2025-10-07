@@ -1,5 +1,7 @@
 // This is a Vercel Serverless Function using CommonJS syntax
 
+// Import Node.js built-in crypto module for verification
+const crypto = require('crypto');
 // Import Firebase Admin SDK using require
 const admin = require('firebase-admin');
 
@@ -19,36 +21,72 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
+// Vercel's default body parser needs to be disabled for raw body access
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
+// Function to read the raw body from the request
+const getRawBody = (req) => {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    req.on('data', (chunk) => chunks.push(chunk));
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', (err) => reject(err));
+  });
+};
+
 // The main function that handles requests, exported using module.exports
 module.exports = async (req, res) => {
-  // 1. Security Check: Ensure the request comes from Scalev
-  const scalevSecret = req.headers['x-scalev-secret'];
-  if (scalevSecret !== process.env.SCALEV_WEBHOOK_SECRET) {
-    return res.status(401).send('Unauthorized: Invalid secret key.');
-  }
-
-  // 2. Ensure it's a POST request
   if (req.method !== 'POST') {
     return res.status(405).send('Method Not Allowed');
   }
 
-  try {
-    const { event, customer_email, product_name } = req.body;
+  const rawBody = await getRawBody(req);
+  const body = JSON.parse(rawBody.toString());
 
-    // --- PERBAIKAN BERDASARKAN DOKUMENTASI SCALEV ---
-    // 3. Handle the initial test event from Scalev
+  try {
+    // --- NEW HMAC-SHA256 VERIFICATION BASED ON DOCUMENTATION ---
+    const receivedSignature = req.headers['x-scalev-hmac-sha256'];
+    const signingSecret = process.env.SCALEV_WEBHOOK_SECRET;
+
+    if (!receivedSignature) {
+        return res.status(401).send('Unauthorized: Signature missing.');
+    }
+      
+    // Calculate our own signature
+    const calculatedSignature = crypto
+      .createHmac('sha256', signingSecret)
+      .update(rawBody)
+      .digest('base64');
+      
+    // Securely compare the two signatures
+    const areSignaturesEqual = crypto.timingSafeEqual(
+        Buffer.from(receivedSignature, 'base64'),
+        Buffer.from(calculatedSignature, 'base64')
+    );
+
+    if (!areSignaturesEqual) {
+      return res.status(401).send('Unauthorized: Invalid signature.');
+    }
+    // --- END OF NEW VERIFICATION ---
+    
+    const { event, customer_email, product_name } = body;
+
+    // Handle the initial test event from Scalev
     if (event === "business.test_event") {
       console.log("Received Scalev test event. Responding with 200 OK.");
       return res.status(200).send('OK: Test event received successfully.');
     }
-    // --- AKHIR PERBAIKAN ---
 
-    // 4. Handle actual order events
+    // Handle actual order events
     if (!customer_email || !product_name) {
       return res.status(400).send('Bad Request: Missing customer_email or product_name for an order event.');
     }
 
-    // 5. Determine how many tokens to add
+    // Determine how many tokens to add
     let tokensToAdd = 0;
     if (product_name === "Akses FotoGem") {
       tokensToAdd = 100;
@@ -57,7 +95,7 @@ module.exports = async (req, res) => {
       return res.status(200).send('OK: Product not relevant for tokens.');
     }
 
-    // 6. Find the user in Firestore by their email
+    // Find the user in Firestore by their email
     const usersRef = db.collection('users');
     const snapshot = await usersRef.where('email', '==', customer_email).limit(1).get();
 
@@ -66,7 +104,7 @@ module.exports = async (req, res) => {
       return res.status(200).send('OK: User not found, but webhook acknowledged.');
     }
 
-    // 7. Update the user's token count
+    // Update the user's token count
     const userDoc = snapshot.docs[0];
     await userDoc.ref.update({
       tokens: admin.firestore.FieldValue.increment(tokensToAdd)
@@ -77,6 +115,8 @@ module.exports = async (req, res) => {
 
   } catch (error) {
     console.error("Error processing Scalev webhook:", error);
+    // Be careful not to expose detailed errors in production
     return res.status(500).send('Internal Server Error');
   }
 };
+
