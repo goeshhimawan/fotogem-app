@@ -544,20 +544,173 @@
             galleryInput.addEventListener('change', (e) => { hideUploadChoiceModal(); if (e.target.files.length > 0) handleFiles(e.target.files); e.target.value = ''; });
 
             // --- Camera Logic ---
-            const startCamera = async () => { /* ... (Same as original) */ };
-            const stopCamera = () => { /* ... (Same as original) */ };
-            captureBtn.addEventListener('click', () => { /* ... (Same as original) */ });
+            const startCamera = async () => {
+                if ('mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices) {
+                    try {
+                        const constraints = { video: { facingMode: "environment" } };
+                        cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+                        cameraStreamElem.srcObject = cameraStream;
+                        cameraStreamElem.onloadedmetadata = () => {
+                            cameraStreamElem.play();
+                            cameraView.classList.remove('hidden');
+                        };
+                    } catch (err) {
+                        console.error("Camera access error:", err);
+                        showToast("Tidak bisa mengakses kamera. Pastikan Anda telah memberikan izin.", false);
+                    }
+                } else {
+                    showToast("Browser Anda tidak mendukung akses kamera.", false);
+                }
+            };
+            const stopCamera = () => {
+                if (cameraStream) {
+                    cameraStream.getTracks().forEach(track => track.stop());
+                }
+                cameraView.classList.add('hidden');
+            };
+            captureBtn.addEventListener('click', () => {
+                const context = cameraCanvas.getContext('2d');
+                cameraCanvas.width = cameraStreamElem.videoWidth;
+                cameraCanvas.height = cameraStreamElem.videoHeight;
+                context.translate(cameraCanvas.width, 0);
+                context.scale(-1, 1);
+                context.drawImage(cameraStreamElem, 0, 0, cameraCanvas.width, cameraCanvas.height);
+                cameraCanvas.toBlob(blob => {
+                    const file = new File([blob], `capture-${Date.now()}.png`, { type: 'image/png' });
+                    handleFiles([file]);
+                }, 'image/png');
+                stopCamera();
+            });
             cancelCameraBtn.addEventListener('click', stopCamera);
             
             // --- File Handling & Classification ---
             const fileToBase64 = (file) => new Promise((resolve, reject) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => resolve(reader.result.split(',')[1]); reader.onerror = error => reject(error); });
-            const classifyImage = async (fileData) => { /* ... (Same as original) */ };
-            const displayNicheRecommendation = (niche) => { /* ... (Same as original) */ };
-            const handleFiles = (files) => { /* ... (Same as original) */ };
-            const previewFile = (fileData) => { /* ... (Same as original) */ };
+            const classifyImage = async (fileData) => {
+                nicheRecommendationContent.innerHTML = `<div class="spinner"></div> <p>Mendeteksi niche produk...</p>`;
+                nicheRecommendationBox.classList.remove('hidden');
+                chooseStyleBtn.disabled = true;
+
+                try {
+                    if (!fileData.base64) {
+                        fileData.base64 = await fileToBase64(fileData.file);
+                    }
+                    const apiKey = "";
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                    const prompt = `Analisis produk dalam gambar ini dan klasifikasikan ke dalam SATU dari kategori berikut: ${NICHE_CATEGORIES.join(", ")}. Balas hanya dengan nama kategori, tanpa teks atau tanda baca tambahan.`;
+                    const payload = {
+                        contents: [{
+                            parts: [
+                                { text: prompt },
+                                { inlineData: { mimeType: fileData.file.type, data: fileData.base64 } }
+                            ]
+                        }]
+                    };
+                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error('API response not OK.');
+                    const result = await response.json();
+                    const classification = result.candidates?.[0]?.content?.parts?.[0]?.text.trim();
+                    if (classification && NICHE_CATEGORIES.includes(classification)) {
+                        detectedNiche = classification;
+                        displayNicheRecommendation(detectedNiche);
+                    } else {
+                        throw new Error('Could not determine a valid niche.');
+                    }
+                } catch (error) {
+                    console.error("Classification failed:", error);
+                    nicheRecommendationContent.innerHTML = `<p>Gagal mendeteksi niche produk. Silakan pilih gaya secara manual.</p>`;
+                } finally {
+                    chooseStyleBtn.disabled = false;
+                }
+            };
+            const displayNicheRecommendation = (niche) => {
+                const recommendedStyle = NICHE_STYLE_MAP[niche] || "gaya yang direkomendasikan";
+                nicheRecommendationContent.innerHTML = `
+                    <svg class="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                    <div>
+                        <p>Kami mendeteksi: <strong>${niche}</strong></p>
+                        <p class="text-xs">Gaya yang direkomendasikan: <strong>${recommendedStyle}</strong></p>
+                    </div>
+                `;
+            };
+            const handleFiles = (files) => {
+                const allFiles = Array.from(files);
+                let newImageFiles = allFiles.filter(file => file.type.startsWith('image/'));
+                if (newImageFiles.length < allFiles.length) {
+                    showToast("Beberapa file bukan gambar dan diabaikan.", false);
+                }
+                if (newImageFiles.length === 0 && allFiles.length > 0) {
+                    showToast("Silakan unggah file gambar yang valid (JPG, PNG, dll).", false);
+                    return;
+                }
+                const isFirstUpload = uploadedFiles.length === 0;
+                let successfulUploads = 0;
+                for (const file of newImageFiles) {
+                    if (uploadedFiles.length >= 5) {
+                        showToast("Anda hanya dapat mengunggah maksimal 5 foto.", false);
+                        break;
+                    }
+                    if (file.size > 10 * 1024 * 1024) {
+                        showToast(`File "${file.name}" terlalu besar (>10MB).`, false);
+                        continue;
+                    }
+                    const newFileData = { file, base64: null, objectURL: URL.createObjectURL(file) };
+                    uploadedFiles.push(newFileData);
+                    previewFile(newFileData);
+                    successfulUploads++;
+                }
+                if (successfulUploads > 0) {
+                    showToast(`${successfulUploads} gambar berhasil diunggah!`);
+                }
+                if (uploadedFiles.length > 0) {
+                    previewGrid.classList.remove('hidden');
+                    if (isFirstUpload && uploadedFiles.length > 0) {
+                       classifyImage(uploadedFiles[0]);
+                    } else {
+                       chooseStyleBtn.disabled = false;
+                    }
+                }
+            };
+            const previewFile = (fileData) => {
+                const imgContainer = document.createElement('div');
+                imgContainer.className = 'relative group';
+                const img = document.createElement('img');
+                img.src = fileData.objectURL;
+                img.className = 'w-full h-auto aspect-square object-cover rounded-lg';
+                imgContainer.appendChild(img);
+                const removeBtn = document.createElement('button');
+                removeBtn.innerHTML = '&times;';
+                removeBtn.className = 'absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center font-bold opacity-0 group-hover:opacity-100 transition';
+                removeBtn.onclick = () => {
+                    imgContainer.remove();
+                    const wasFirstFile = uploadedFiles[0]?.objectURL === fileData.objectURL;
+                    uploadedFiles = uploadedFiles.filter(f => f.objectURL !== fileData.objectURL);
+                    URL.revokeObjectURL(fileData.objectURL);
+                    if (uploadedFiles.length === 0) {
+                        chooseStyleBtn.disabled = true;
+                        previewGrid.classList.add('hidden');
+                        nicheRecommendationBox.classList.add('hidden');
+                        detectedNiche = null;
+                    } else if (wasFirstFile) {
+                        classifyImage(uploadedFiles[0]);
+                    }
+                };
+                imgContainer.appendChild(removeBtn);
+                previewGrid.appendChild(imgContainer);
+            };
             
             // --- Style Page Logic ---
-            const applyStyleRecommendation = () => { /* ... (Same as original) */ };
+            const applyStyleRecommendation = () => {
+                if (!detectedNiche) return;
+                const recommendedStyleName = NICHE_STYLE_MAP[detectedNiche];
+                if (!recommendedStyleName) return;
+                styleCards.forEach(card => {
+                    if (card.dataset.style === recommendedStyleName) {
+                        card.classList.add('selected');
+                    } else {
+                        card.classList.remove('selected');
+                    }
+                });
+            };
             aiRecommendToggle.addEventListener('change', () => { if (aiRecommendToggle.checked) applyStyleRecommendation(); });
             styleCards.forEach(card => card.addEventListener('click', () => { styleCards.forEach(c => c.classList.remove('selected')); card.classList.add('selected'); aiRecommendToggle.checked = false; }));
             onModelToggle.addEventListener('change', () => onModelControls.classList.toggle('hidden', !onModelToggle.checked));
@@ -630,10 +783,48 @@
                 let advancedPrompt = "";
 
                 if (onModelToggle.checked) {
-                    // ... (Full model prompt building logic)
+                    const modelPreset = document.getElementById('model-preset').value;
+                    modelPrompt += " The photo must include a human model. ";
+                    const gender = document.getElementById('model-gender').value;
+                    if (gender !== 'Auto Detect') modelPrompt += `Gender: ${gender}. `;
+                    const age = document.getElementById('model-age').value;
+                    if (age !== 'Random') modelPrompt += `Age: ${age}. `;
+                    const ethnicity = document.getElementById('model-ethnicity').value;
+                    if (ethnicity !== 'Random') modelPrompt += `Ethnicity: ${ethnicity}. `;
+                    const skinTone = document.getElementById('model-skin-tone').value;
+                    if (skinTone !== 'Random') modelPrompt += `Skin Tone: ${skinTone}. `;
+                    const outfit = document.getElementById('model-outfit').value;
+                    if (outfit !== 'Random') modelPrompt += `Outfit: ${outfit}. `;
+                    if (modelPreset !== 'Manual Control') {
+                        modelPrompt += MODEL_PRESET_PROMPT_MAP[modelPreset] || '';
+                    } else {
+                        const pose = document.getElementById('model-pose').value;
+                        if (pose !== 'Random') modelPrompt += `Pose: ${pose}. `;
+                        const expression = document.getElementById('model-expression').value;
+                        if (expression !== 'Random') modelPrompt += `Expression: ${expression}. `;
+                        modelPrompt += `Camera Focus: ${document.getElementById('model-focus').value}. `;
+                        modelPrompt += `Makeup: ${document.getElementById('model-makeup').value}. `;
+                    }
                 }
                 if (advancedOptionsToggle.checked) {
-                    // ... (Full advanced prompt building logic)
+                    const lightingMood = document.getElementById('adv-lighting-mood').value;
+                    const backgroundVariant = document.getElementById('adv-background-variant').value;
+                    const bgColor = document.getElementById('adv-bg-color-hex').value;
+                    const shotType = document.getElementById('adv-shot-type').value;
+                    const shadowStyle = document.getElementById('adv-shadow-style').value;
+                    const propPresence = document.getElementById('adv-prop-presence').value;
+                    const customPrompt = document.getElementById('adv-custom-prompt').value;
+                    advancedPrompt = ` The lighting mood is '${lightingMood}'.`;
+                    advancedPrompt += ` The background is a '${backgroundVariant}' type.`;
+                    if (backgroundVariant === 'Solid' || backgroundVariant === 'Gradient') {
+                        advancedPrompt += ` The primary color for the background should be around ${bgColor}.`;
+                    }
+                    advancedPrompt += ` The camera composition is a '${shotType}'.`;
+                    advancedPrompt += ` Use a '${shadowStyle}'.`;
+                    advancedPrompt += ` Prop presence level is '${propPresence}'.`;
+                    if (customPrompt.trim() !== '') {
+                        advancedPrompt += ` Additional user instructions: ${customPrompt}.`;
+                    }
                 } else {
                     if (!onModelToggle.checked) {
                         stylePrompt = STYLE_PROMPT_MAP[style] || `The desired style is: "${style}".`;
@@ -644,13 +835,39 @@
             
             // --- Slider & Help Logic ---
             let isDragging = false;
-            const moveSlider = (x) => { /* ... (Same as original) */ };
+            const moveSlider = (x) => {
+                const containerRect = comparisonSlider.getBoundingClientRect();
+                let percentage = ((x - containerRect.left) / containerRect.width) * 100;
+                percentage = Math.max(0, Math.min(100, percentage));
+                const afterImageContainer = comparisonSlider.querySelector('.after-image-container');
+                const handleWrapper = comparisonSlider.querySelector('.handle-icon-wrapper');
+                afterImageContainer.style.clipPath = `polygon(0 0, ${percentage}% 0, ${percentage}% 100%, 0 100%)`;
+                handleWrapper.style.left = `${percentage}%`;
+            };
             comparisonSlider.addEventListener('mousedown', (e) => { e.preventDefault(); isDragging = true; moveSlider(e.clientX); });
+            comparisonSlider.addEventListener('touchstart', (e) => { e.preventDefault(); isDragging = true; moveSlider(e.touches[0].clientX); });
             window.addEventListener('mouseup', () => isDragging = false);
+            window.addEventListener('touchend', () => isDragging = false);
             window.addEventListener('mousemove', (e) => { if(isDragging) moveSlider(e.clientX); });
-            // ... (Add touch events for slider)
-            helpBtn.addEventListener('click', (e) => { /* ... (Same as original) */ });
-            document.addEventListener('click', () => { /* ... (Same as original) */ });
+            window.addEventListener('touchmove', (e) => { if(isDragging) moveSlider(e.touches[0].clientX); });
+            
+            helpBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isHidden = helpTooltip.classList.contains('hidden');
+                if (isHidden) {
+                    helpTooltip.classList.remove('hidden');
+                    setTimeout(() => helpTooltip.classList.remove('opacity-0', 'translate-y-2'), 10);
+                } else {
+                    helpTooltip.classList.add('opacity-0', 'translate-y-2');
+                    setTimeout(() => helpTooltip.classList.add('hidden'), 300);
+                }
+            });
+            document.addEventListener('click', () => {
+                 if (!helpTooltip.classList.contains('hidden')) {
+                     helpTooltip.classList.add('opacity-0', 'translate-y-2');
+                    setTimeout(() => helpTooltip.classList.add('hidden'), 300);
+                 }
+            });
 
             // --- Initial state ---
             showPage('landing');
