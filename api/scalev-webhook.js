@@ -4,9 +4,11 @@
 // Import Firebase Admin SDK
 import admin from 'firebase-admin';
 
-// Decode the private key from the new Base64 environment variable
-// This is a more reliable way to handle multi-line keys
-const privateKey = Buffer.from(process.env.FIREBASE_PRIVATE_KEY_BASE64, 'base64').toString('ascii');
+// This is the crucial fix:
+// We take the raw private key string from the environment variable
+// and manually replace the literal '\\n' characters with actual newline characters '\n'.
+// This ensures the key is in the correct PEM format that Firebase expects.
+const privateKey = process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n');
 
 // Initialize Firebase Admin SDK
 // Vercel Environment Variables will be used for credentials
@@ -15,7 +17,7 @@ if (!admin.apps.length) {
     credential: admin.credential.cert({
       projectId: process.env.FIREBASE_PROJECT_ID,
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      // Use the decoded private key
+      // Use the newly formatted private key
       privateKey: privateKey,
     }),
   });
@@ -81,3 +83,4 @@ export default async function handler(req, res) {
     return res.status(500).send('Internal Server Error');
   }
 }
+
