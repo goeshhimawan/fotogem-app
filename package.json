@@ -1,16 +1,11 @@
 {
-  "name": "fotogem-app",
+  "name": "fotogem-backend",
   "version": "1.0.0",
-  "description": "FotoGem AI Application with Vercel deployment.",
-  "main": "index.html",
-  "scripts": {
-    "start": "serve",
-    "build": "echo 'No build step required for static assets'"
-  },
+  "description": "Webhook handler for FotoGem",
+  "main": "api/scalev-webhook.js",
+  "type": "module",
   "dependencies": {
     "firebase-admin": "^12.0.0"
-  },
-  "devDependencies": {
-    "serve": "^14.2.1"
   }
 }
+
