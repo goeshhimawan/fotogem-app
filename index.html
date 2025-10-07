@@ -596,10 +596,6 @@
                     }
                     const apiKey = "%VITE_GEMINI_API_KEY%"; // Use Gemini key for classification
                     
-                    // --- DEBUGGING LINE ---
-                    console.log("Mencoba menggunakan Gemini API Key (untuk klasifikasi):", apiKey);
-                    // --- END DEBUGGING ---
-
                     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                     const prompt = `Analisis produk dalam gambar ini dan klasifikasikan ke dalam SATU dari kategori berikut: ${NICHE_CATEGORIES.join(", ")}. Balas hanya dengan nama kategori, tanpa teks atau tanda baca tambahan.`;
                     const payload = {
