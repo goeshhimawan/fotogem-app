@@ -3,147 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FotoGem – Studio Foto AI</title>
+    <title>FotoGem – Studio Foto AI Profesional</title>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        /* Custom styles for the app */
-        body {
-            font-family: 'Inter', sans-serif;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-
-        /* Smooth page transition styles */
-        .page {
-            transition: opacity 0.5s ease-in-out;
-        }
-        .page.hidden {
-            opacity: 0;
-            pointer-events: none;
-            position: absolute;
-        }
-        
-        /* Drag-over effect for upload area */
-        .drag-over {
-            border-color: #3B82F6;
-            background-color: #eff6ff;
-        }
-
-        /* Style for selected style card */
-        .style-card.selected {
-            border-color: #3B82F6;
-            box-shadow: 0 0 0 2px #3B82F6;
-        }
-        
-        .style-card {
-            position: relative;
-        }
-
-        /* Before/After slider styles */
-        .comparison-slider {
-            position: relative;
-            overflow: hidden;
-            border-radius: 0.75rem;
-        }
-        .comparison-slider img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain; /* Changed from 'cover' to 'contain' */
-            pointer-events: none;
-        }
-        .comparison-slider .after-image-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: 100%;
-            clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);
-        }
-        .comparison-slider .handle-icon-wrapper {
-             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            height: 40px;
-            width: 4px;
-            background: white;
-            cursor: ew-resize;
-            z-index: 10;
-        }
-        .comparison-slider .handle-icon-wrapper::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            height: 100%;
-            width: 4px;
-            background: white;
-        }
-        .comparison-slider .handle-icon {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: white;
-            border: 2px solid #3B82F6;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #3B82F6;
-            box-shadow: 0 0 10px rgba(0,0,0,0.2);
-        }
-        .spinner {
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid #3B82F6;
-            border-radius: 50%;
-            width: 16px;
-            height: 16px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        .page { transition: opacity 0.5s ease-in-out; }
+        .page.hidden { opacity: 0; pointer-events: none; position: absolute; }
+        .drag-over { border-color: #3B82F6; background-color: #eff6ff; }
+        .style-card.selected { border-color: #3B82F6; box-shadow: 0 0 0 2px #3B82F6; }
+        .style-card { position: relative; }
+        .comparison-slider { position: relative; overflow: hidden; border-radius: 0.75rem; }
+        .comparison-slider img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+        .comparison-slider .after-image-container { position: absolute; top: 0; left: 0; height: 100%; width: 100%; clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%); }
+        .comparison-slider .handle-icon-wrapper { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); height: 40px; width: 4px; background: white; cursor: ew-resize; z-index: 10; }
+        .comparison-slider .handle-icon-wrapper::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); height: 100%; width: 4px; background: white; }
+        .comparison-slider .handle-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; border-radius: 50%; background: white; border: 2px solid #3B82F6; display: flex; align-items: center; justify-content: center; color: #3B82F6; box-shadow: 0 0 10px rgba(0,0,0,0.2); }
+        .spinner { border: 2px solid #f3f3f3; border-top: 2px solid #3B82F6; border-radius: 50%; width: 16px; height: 16px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
 
-    <!-- Main Application Container -->
     <div id="app" class="relative min-h-screen flex flex-col">
 
-        <!-- Header -->
         <header class="w-full p-4 sm:p-6 flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-gray-900">FotoGem</h1>
-            <button class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">Masuk</button>
+            <a href="#" id="logo-link" class="cursor-pointer">
+                <img src="https://ik.imagekit.io/goeshhimawan/FotoGem%20_%20AI%20Product%20Studio/FotoGem.webp?updatedAt=1759809442892" alt="Logo FotoGem" class="h-8 md:h-10 w-auto">
+            </a>
+            <div id="auth-section">
+                <button id="login-btn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">Masuk</button>
+                <div id="user-info" class="hidden items-center gap-4">
+                    <div class="text-right">
+                        <p id="user-email" class="text-sm font-medium text-gray-800"></p>
+                        <p class="text-xs text-gray-500">Sisa Token: <span id="token-count" class="font-bold">0</span></p>
+                    </div>
+                    <button id="logout-btn" class="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-200 rounded-lg shadow-sm hover:bg-red-50 transition">Keluar</button>
+                </div>
+            </div>
         </header>
 
         <main class="flex-grow flex items-center justify-center p-4">
             
-            <!-- Step 1: Landing Page -->
             <div id="landing-page" class="page w-full max-w-4xl text-center">
-                <div class="space-y-6">
+                 <div class="space-y-6">
                     <h2 class="text-4xl md:text-5xl font-bold tracking-tight text-gray-900">Ubah foto biasa menjadi visual berkualitas studio dalam hitungan detik.</h2>
                     <p class="text-lg text-gray-600 max-w-2xl mx-auto">Unggah foto produk Anda dan biarkan AI menciptakan gambar sempurna yang siap untuk marketplace.</p>
-                    <button id="get-started-btn" class="bg-blue-500 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-blue-600 transition-transform transform hover:scale-105">Mulai Sekarang</button>
+                    <button id="get-started-btn" class="bg-blue-500 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-blue-600 transition-transform transform hover:scale-105">Mulai Sekarang (Gratis 10 Token)</button>
                     <div class="mt-8 pt-8">
                         <img src="https://ik.imagekit.io/goeshhimawan/FotoGem%20_%20AI%20Product%20Studio/Hero%20Image?updatedAt=1759652919434" alt="Contoh foto produk sebelum dan sesudah" class="w-full aspect-video object-cover rounded-xl shadow-lg mx-auto">
                     </div>
-                </div>
+                 </div>
             </div>
-
-            <!-- Step 2: Upload Page -->
+            
             <div id="upload-page" class="page hidden w-full max-w-3xl">
                 <div class="bg-white p-8 rounded-2xl shadow-lg w-full space-y-6 text-center">
                     <div>
@@ -152,21 +69,18 @@
                     </div>
                     
                     <div id="drop-area" class="border-2 border-dashed border-gray-300 rounded-xl p-8 cursor-pointer hover:bg-gray-50 transition">
-                        <input type="file" id="gallery-input" multiple accept="image/*" class="hidden">
+                         <input type="file" id="gallery-input" multiple accept="image/*" class="hidden">
                         <div class="flex flex-col items-center justify-center space-y-4 text-gray-500">
                              <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9 M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                            <p class="font-semibold">Seret & letakkan file di sini atau <span class="text-blue-500">klik untuk mencari</span></p>
+                             <p class="font-semibold">Seret & letakkan file di sini atau <span class="text-blue-500">klik untuk mencari</span></p>
                             <p class="text-xs">Mendukung: JPG, PNG, WEBP (Maks 10MB per foto)</p>
                         </div>
-                    </div>
+                     </div>
 
                     <div id="preview-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 hidden"></div>
 
-                    <!-- Niche Recommendation Box -->
                     <div id="niche-recommendation-box" class="hidden bg-indigo-50 border border-indigo-200 text-indigo-800 text-sm rounded-lg p-3 text-left">
-                        <div id="niche-recommendation-content" class="flex items-center space-x-3">
-                            <!-- Content will be populated by JS -->
-                        </div>
+                         <div id="niche-recommendation-content" class="flex items-center space-x-3"></div>
                     </div>
 
                     <div class="bg-blue-50 border border-blue-200 text-blue-800 text-sm rounded-lg p-3 text-center">
@@ -177,218 +91,61 @@
                 </div>
             </div>
 
-            <!-- Step 3: Choose Style Page -->
             <div id="style-page" class="page hidden w-full max-w-5xl">
-                 <div class="bg-white p-8 rounded-2xl shadow-lg w-full space-y-8">
-                      <div>
-                          <h2 class="text-3xl font-bold text-gray-900 text-center">Pilih Gaya Studio Anda</h2>
-                          <p class="text-gray-500 mt-2 text-center">Pilih preset atau biarkan AI merekomendasikannya untuk Anda.</p>
-                      </div>
-
-                      <div class="flex items-center justify-center space-x-3">
-                          <span class="text-gray-600">Rekomendasi AI</span>
-                          <label for="ai-recommend-toggle" class="relative inline-flex items-center cursor-pointer">
-                              <input type="checkbox" value="" id="ai-recommend-toggle" class="sr-only peer" checked>
-                              <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
-                          </label>
-                      </div>
-
-                      <div class="grid grid-cols-3 gap-4">
-                          <!-- Style Cards -->
-                          <div class="style-card border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:border-blue-400 transition selected" data-style="Minimalist White">
-                              <img src="https://ik.imagekit.io/goeshhimawan/FotoGem%20_%20AI%20Product%20Studio/Minimalist%20White.webp?updatedAt=1759654061044" class="rounded-md w-full h-auto aspect-square object-cover" alt="Minimalist White style thumbnail" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/200x200/e2e8f0/adb5bd?text=Error';">
-                              <p class="text-center font-medium text-sm mt-2">Minimalist White</p>
-                          </div>
-                          <div class="style-card border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:border-blue-400 transition" data-style="Modern Aesthetic">
-                              <img src="https://ik.imagekit.io/goeshhimawan/FotoGem%20_%20AI%20Product%20Studio/Modern%20Aesthetic.webp?updatedAt=1759654060875" class="rounded-md w-full h-auto aspect-square object-cover" alt="Modern Aesthetic style thumbnail" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/200x200/e2e8f0/adb5bd?text=Error';">
-                              <p class="text-center font-medium text-sm mt-2">Modern Aesthetic</p>
-                          </div>
-                          <div class="style-card border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:border-blue-400 transition" data-style="Luxury Black">
-                              <img src="https://ik.imagekit.io/goeshhimawan/FotoGem%20_%20AI%20Product%20Studio/Luxury%20Black.webp?updatedAt=1759654060799" class="rounded-md w-full h-auto aspect-square object-cover" alt="Luxury Black style thumbnail" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/200x200/e2e8f0/adb5bd?text=Error';">
-                              <p class="text-center font-medium text-sm mt-2">Luxury Black</p>
-                          </div>
-                          <div class="style-card border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:border-blue-400 transition" data-style="Lifestyle Scene">
-                              <img src="https://ik.imagekit.io/goeshhimawan/FotoGem%20_%20AI%20Product%20Studio/Lifestyle%20Scene.webp?updatedAt=1759654060865" class="rounded-md w-full h-auto aspect-square object-cover" alt="Lifestyle Scene style thumbnail" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/200x200/e2e8f0/adb5bd?text=Error';">
-                              <p class="text-center font-medium text-sm mt-2">Lifestyle Scene</p>
-                          </div>
-                          <div class="style-card border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:border-blue-400 transition" data-style="Marketplace Pure White">
-                              <img src="https://ik.imagekit.io/goeshhimawan/FotoGem%20_%20AI%20Product%20Studio/Pure%20White.webp?updatedAt=1759654060833" class="rounded-md w-full h-auto aspect-square object-cover" alt="Marketplace Pure White style thumbnail" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/200x200/e2e8f0/adb5bd?text=Error';">
-                              <p class="text-center font-medium text-sm mt-2">Marketplace Pure White</p>
-                          </div>
-                          <div class="style-card border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:border-blue-400 transition" data-style="Creative Flatlay">
-                              <img src="https://ik.imagekit.io/goeshhimawan/FotoGem%20_%20AI%20Product%20Studio/Creative%20Flatlay.webp?updatedAt=1759654060919" class="rounded-md w-full h-auto aspect-square object-cover" alt="Creative Flatlay style thumbnail" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/200x200/e2e8f0/adb5bd?text=Error';">
-                              <p class="text-center font-medium text-sm mt-2">Creative Flatlay</p>
-                          </div>
-                          <!-- New Style Cards -->
-                          <div class="style-card border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:border-blue-400 transition" data-style="Clean Natural">
-                              <img src="https://ik.imagekit.io/goeshhimawan/FotoGem%20_%20AI%20Product%20Studio/Clean%20Natural.webp?updatedAt=1759654061046" class="rounded-md w-full h-auto aspect-square object-cover" alt="Clean Natural style thumbnail" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/200x200/e2e8f0/adb5bd?text=Error';">
-                              <p class="text-center font-medium text-sm mt-2">Clean Natural</p>
-                          </div>
-                          <div class="style-card border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:border-blue-400 transition" data-style="On-Model Studio">
-                              <img src="https://ik.imagekit.io/goeshhimawan/FotoGem%20_%20AI%20Product%20Studio/On-Model%20Studio.webp?updatedAt=1759654060952" class="rounded-md w-full h-auto aspect-square object-cover" alt="On-Model Studio style thumbnail" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/200x200/e2e8f0/adb5bd?text=Error';">
-                              <p class="text-center font-medium text-sm mt-2">On-Model Studio</p>
-                          </div>
-                          <div class="style-card border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:border-blue-400 transition" data-style="Urban Lifestyle">
-                              <img src="https://ik.imagekit.io/goeshhimawan/FotoGem%20_%20AI%20Product%20Studio/Urban%20Lifestyle.webp?updatedAt=1759654061147" class="rounded-md w-full h-auto aspect-square object-cover" alt="Urban Lifestyle style thumbnail" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/200x200/e2e8f0/adb5bd?text=Error';">
-                              <p class="text-center font-medium text-sm mt-2">Urban Lifestyle</p>
-                          </div>
-                          <div class="style-card border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:border-blue-400 transition" data-style="Industrial Metal">
-                              <img src="https://ik.imagekit.io/goeshhimawan/FotoGem%20_%20AI%20Product%20Studio/Industrial%20Metal.webp?updatedAt=1759654060947" class="rounded-md w-full h-auto aspect-square object-cover" alt="Industrial Metal style thumbnail" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/200x200/e2e8f0/adb5bd?text=Error';">
-                              <p class="text-center font-medium text-sm mt-2">Industrial Metal</p>
-                          </div>
-                          <div class="style-card border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:border-blue-400 transition" data-style="Kitchen Lifestyle">
-                              <img src="https://ik.imagekit.io/goeshhimawan/FotoGem%20_%20AI%20Product%20Studio/Kitchen%20Lifestyle.webp?updatedAt=1759654061116" class="rounded-md w-full h-auto aspect-square object-cover" alt="Kitchen Lifestyle style thumbnail" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/200x200/e2e8f0/adb5bd?text=Error';">
-                              <p class="text-center font-medium text-sm mt-2">Kitchen Lifestyle</p>
-                          </div>
-                          <div class="style-card border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:border-blue-400 transition" data-style="Playful Pastel">
-                              <img src="https://ik.imagekit.io/goeshhimawan/FotoGem%20_%20AI%20Product%20Studio/Playful%20Pastel.webp?updatedAt=1759654061201" class="rounded-md w-full h-auto aspect-square object-cover" alt="Playful Pastel style thumbnail" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/200x200/e2e8f0/adb5bd?text=Error';">
-                              <p class="text-center font-medium text-sm mt-2">Playful Pastel</p>
-                          </div>
-                          <div class="style-card border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:border-blue-400 transition" data-style="Tech Gradient">
-                              <img src="https://ik.imagekit.io/goeshhimawan/FotoGem%20_%20AI%20Product%20Studio/Tech%20Gradient.webp?updatedAt=1759656007225" class="rounded-md w-full h-auto aspect-square object-cover" alt="Tech Gradient style thumbnail" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/200x200/e2e8f0/adb5bd?text=Error';">
-                              <p class="text-center font-medium text-sm mt-2">Tech Gradient</p>
-                          </div>
-                          <div class="style-card border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:border-blue-400 transition" data-style="Eco Organic">
-                              <img src="https://ik.imagekit.io/goeshhimawan/FotoGem%20_%20AI%20Product%20Studio/Eco%20Organic.webp?updatedAt=1759656007668" class="rounded-md w-full h-auto aspect-square object-cover" alt="Eco Organic style thumbnail" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/200x200/e2e8f0/adb5bd?text=Error';">
-                              <p class="text-center font-medium text-sm mt-2">Eco Organic</p>
-                          </div>
-                          <div class="style-card border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:border-blue-400 transition" data-style="Outdoor Natural Light">
-                              <img src="https://ik.imagekit.io/goeshhimawan/FotoGem%20_%20AI%20Product%20Studio/Outdoor%20Natural%20Light.webp?updatedAt=1759656007519" class="rounded-md w-full h-auto aspect-square object-cover" alt="Outdoor Natural Light style thumbnail" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/200x200/e2e8f0/adb5bd?text=Error';">
-                              <p class="text-center font-medium text-sm mt-2">Outdoor Natural Light</p>
-                          </div>
-                          <div class="style-card border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:border-blue-400 transition" data-style="Interior Aesthetic">
-                              <img src="https://ik.imagekit.io/goeshhimawan/FotoGem%20_%20AI%20Product%20Studio/Interior%20Aesthetic.webp?updatedAt=1759656007615" class="rounded-md w-full h-auto aspect-square object-cover" alt="Interior Aesthetic style thumbnail" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/200x200/e2e8f0/adb5bd?text=Error';">
-                              <p class="text-center font-medium text-sm mt-2">Interior Aesthetic</p>
-                          </div>
-                          <div class="style-card border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:border-blue-400 transition" data-style="Flatlay Gift Box">
-                              <img src="https://ik.imagekit.io/goeshhimawan/FotoGem%20_%20AI%20Product%20Studio/Flatlay%20Gift%20Box.webp?updatedAt=1759656007365" class="rounded-md w-full h-auto aspect-square object-cover" alt="Flatlay Gift Box style thumbnail" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/200x200/e2e8f0/adb5bd?text=Error';">
-                              <p class="text-center font-medium text-sm mt-2">Flatlay Gift Box</p>
-                          </div>
-                          <div class="style-card border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:border-blue-400 transition" data-style="Zen Calm">
-                              <img src="https://ik.imagekit.io/goeshhimawan/FotoGem%20_%20AI%20Product%20Studio/Zen%20Calm.webp?updatedAt=1759656007365" class="rounded-md w-full h-auto aspect-square object-cover" alt="Zen Calm style thumbnail" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/200x200/e2e8f0/adb5bd?text=Error';">
-                              <p class="text-center font-medium text-xs md:text-sm mt-2">Zen Calm</p>
-                          </div>
-                      </div>
-                      
-                      <!-- Advanced Options Accordion -->
-                      <div>
-                          <div class="w-full flex justify-between items-center text-left p-3 bg-gray-100 rounded-lg">
-                              <span class="font-semibold">Opsi Lanjutan</span>
-                              <label class="relative inline-flex items-center cursor-pointer">
-                                  <input type="checkbox" id="advanced-options-toggle" class="sr-only peer">
-                                  <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
-                              </label>
-                          </div>
-
-                          <div id="accordion-content" class="hidden mt-4 space-y-4 p-4 border border-gray-200 rounded-lg transition-opacity duration-300 opacity-50">
-                              <fieldset id="advanced-options-fieldset" disabled>
-                                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                      <div>
-                                          <label class="font-medium text-sm">Jenis Shot</label>
-                                          <select id="adv-shot-type" class="w-full mt-1 p-2 border border-gray-300 rounded-md">
-                                              <option>Mid Shot</option>
-                                              <option>Close-Up Shot</option>
-                                              <option>Full Product Shot</option>
-                                              <option>Angle Shot (45°)</option>
-                                              <option>Top View (Flatlay)</option>
-                                          </select>
-                                      </div>
-                                      <div>
-                                          <label class="font-medium text-sm">Bayangan</label>
-                                          <select id="adv-shadow" class="w-full mt-1 p-2 border border-gray-300 rounded-md">
-                                              <option>Soft</option><option>Hard</option><option>None</option>
-                                          </select>
-                                      </div>
-                                      <div>
-                                          <label class="font-medium text-sm">Refleksi</label>
-                                          <select id="adv-reflection" class="w-full mt-1 p-2 border border-gray-300 rounded-md">
-                                              <option>On</option><option>Off</option>
-                                          </select>
-                                      </div>
-                                      <div>
-                                          <label class="font-medium text-sm">Suasana Pencahayaan</label>
-                                          <select id="adv-lighting" class="w-full mt-1 p-2 border border-gray-300 rounded-md">
-                                              <option>Natural</option><option>Studio</option><option>Warm</option>
-                                          </select>
-                                      </div>
-                                       <div>
-                                          <div class="flex justify-between items-center">
-                                              <label class="font-medium text-sm">Warna Latar</label>
-                                              <label class="flex items-center space-x-2 text-sm cursor-pointer">
-                                                  <input type="checkbox" id="adv-transparent-bg" class="rounded">
-                                                  <span>Transparan</span>
-                                              </label>
-                                          </div>
-                                          <div id="bg-color-inputs" class="flex items-center mt-1">
-                                              <input type="color" id="adv-bg-color-picker" value="#FFFFFF" class="w-8 h-8 rounded-md border border-gray-300 cursor-pointer">
-                                              <input type="text" id="adv-bg-color-hex" value="#FFFFFF" class="w-full ml-2 p-2 border border-gray-300 rounded-md">
-                                          </div>
-                                      </div>
-                                  </div>
-                                  
-                                  <!-- On-Model Variations (conditional) -->
-                                  <div id="on-model-options" class="hidden mt-4">
-                                      <label class="font-medium text-sm">Variasi Model</label>
-                                      <select id="adv-on-model-variation" class="w-full mt-1 p-2 border border-gray-300 rounded-md">
-                                          <option>On Model – Focus Product</option>
-                                          <option>On Model – Half Body</option>
-                                          <option>On Model – Full Body Context</option>
-                                      </select>
-                                  </div>
-
-                                  <div class="mt-4">
-                                      <label for="adv-custom-prompt" class="font-medium text-sm">Prompt Kustom (Opsional)</label>
-                                      <textarea id="adv-custom-prompt" class="w-full mt-1 p-2 border border-gray-300 rounded-md h-20" placeholder="contoh: tambahkan tanaman kecil di latar belakang, buat pencahayaan dramatis"></textarea>
-                                  </div>
-                              </fieldset>
-                          </div>
-                      </div>
-
-                      <button id="generate-btn" class="w-full bg-blue-500 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-blue-600 transition">Buat Foto Studio</button>
-                  </div>
-            </div>
-
-            <!-- Step 4: Processing & Result Page -->
-            <div id="result-page" class="page hidden w-full max-w-4xl">
-                <!-- Processing state -->
-                <div id="processing-view" class="bg-white p-8 rounded-2xl shadow-lg w-full text-center space-y-6">
-                    <h2 class="text-2xl font-bold text-gray-900">Menciptakan foto produk studio Anda...</h2>
-                    <p class="text-gray-500">Memproses foto Anda dengan FotoGem AI...</p>
-                    <div class="w-full bg-gray-200 rounded-full h-4 relative overflow-hidden">
-                        <div class="absolute top-0 left-0 h-full bg-blue-500 animate-pulse" style="width: 100%;"></div>
+                <div class="bg-white p-8 rounded-2xl shadow-lg w-full space-y-8">
+                     <div>
+                        <h2 class="text-3xl font-bold text-gray-900 text-center">Pilih Gaya Studio Anda</h2>
+                        <p class="text-gray-500 mt-2 text-center">Pilih preset atau biarkan AI merekomendasikannya untuk Anda.</p>
                     </div>
-                     <p class="text-sm text-gray-400">Proses ini mungkin memerlukan beberapa saat. Mohon jangan tutup jendela ini.</p>
-                </div>
 
-                <!-- Result state -->
-                <div id="result-view" class="hidden bg-white p-8 rounded-2xl shadow-lg w-full space-y-6">
-                     <h2 class="text-3xl font-bold text-gray-900 text-center">Foto Studio Anda Sudah Siap!</h2>
-                     
-                     <div class="comparison-slider w-full max-w-2xl mx-auto aspect-square">
-                         <img src="" alt="Sebelum" class="before-image">
-                         <div class="after-image-container">
-                             <img src="" alt="Sesudah" class="after-image">
-                         </div>
-                         <div class="handle-icon-wrapper" style="left: 50%;">
-                             <div class="handle-icon">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path></svg>
-                             </div>
-                         </div>
-                     </div>
+                    <div class="flex items-center justify-center space-x-3">
+                        <span class="text-gray-600">Rekomendasi AI</span>
+                         <label for="ai-recommend-toggle" class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" value="" id="ai-recommend-toggle" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                         </label>
+                    </div>
 
+                    <div class="grid grid-cols-3 md:grid-cols-5 gap-4">
+                        <div class="style-card border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:border-blue-400 transition selected" data-style="Classic Studio"><img src="https://ik.imagekit.io/goeshhimawan/FotoGem%20_%20AI%20Product%20Studio/NEW%20Thumbnail/Classic%20Studio.webp?updatedAt=1759814972476" class="rounded-md w-full h-auto aspect-square object-cover" alt="Classic Studio thumbnail" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/200x200/e2e8f0/adb5bd?text=Error';"><p class="text-center font-medium text-sm mt-2">Classic Studio</p></div>
+                        <div class="style-card border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:border-blue-400 transition" data-style="Natural Organic"><img src="https://ik.imagekit.io/goeshhimawan/FotoGem%20_%20AI%20Product%20Studio/NEW%20Thumbnail/Natural%20Organic.webp?updatedAt=1759814972642" class="rounded-md w-full h-auto aspect-square object-cover" alt="Natural Organic thumbnail" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/200x200/e2e8f0/adb5bd?text=Error';"><p class="text-center font-medium text-sm mt-2">Natural Organic</p></div>
+                        <div class="style-card border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:border-blue-400 transition" data-style="Luxury Premium"><img src="https://ik.imagekit.io/goeshhimawan/FotoGem%20_%20AI%20Product%20Studio/NEW%20Thumbnail/Luxury%20Premium.webp?updatedAt=1759814972622" class="rounded-md w-full h-auto aspect-square object-cover" alt="Luxury Premium thumbnail" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/200x200/e2e8f0/adb5bd?text=Error';"><p class="text-center font-medium text-sm mt-2">Luxury Premium</p></div>
+                        <div class="style-card border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:border-blue-400 transition" data-style="Modern Minimal"><img src="https://ik.imagekit.io/goeshhimawan/FotoGem%20_%20AI%20Product%20Studio/NEW%20Thumbnail/Modern%20Minimal.webp?updatedAt=1759814972711" class="rounded-md w-full h-auto aspect-square object-cover" alt="Modern Minimal thumbnail" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/200x200/e2e8f0/adb5bd?text=Error';"><p class="text-center font-medium text-sm mt-2">Modern Minimal</p></div>
+                        <div class="style-card border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:border-blue-400 transition" data-style="Lifestyle"><img src="https://ik.imagekit.io/goeshhimawan/FotoGem%20_%20AI%20Product%20Studio/NEW%20Thumbnail/Lifestyle.webp?updatedAt=1759814972676" class="rounded-md w-full h-auto aspect-square object-cover" alt="Lifestyle thumbnail" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/200x200/e2e8f0/adb5bd?text=Error';"><p class="text-center font-medium text-sm mt-2">Lifestyle</p></div>
+                        <div class="style-card border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:border-blue-400 transition" data-style="Flatlay"><img src="https://ik.imagekit.io/goeshhimawan/FotoGem%20_%20AI%20Product%20Studio/NEW%20Thumbnail/Flatlay.webp?updatedAt=1759814972645" class="rounded-md w-full h-auto aspect-square object-cover" alt="Flatlay thumbnail" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/200x200/e2e8f0/adb5bd?text=Error';"><p class="text-center font-medium text-sm mt-2">Flatlay</p></div>
+                        <div class="style-card border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:border-blue-400 transition" data-style="Tech Futuristic"><img src="https://ik.imagekit.io/goeshhimawan/FotoGem%20_%20AI%20Product%20Studio/NEW%20Thumbnail/Tech%20Futuristic.webp?updatedAt=1759814972509" class="rounded-md w-full h-auto aspect-square object-cover" alt="Tech Futuristic thumbnail" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/200x200/e2e8f0/adb5bd?text=Error';"><p class="text-center font-medium text-sm mt-2">Tech Futuristic</p></div>
+                        <div class="style-card border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:border-blue-400 transition" data-style="Interior"><img src="https://ik.imagekit.io/goeshhimawan/FotoGem%20_%20AI%20Product%20Studio/NEW%20Thumbnail/Interior.webp?updatedAt=1759814972495" class="rounded-md w-full h-auto aspect-square object-cover" alt="Interior thumbnail" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/200x200/e2e8f0/adb5bd?text=Error';"><p class="text-center font-medium text-sm mt-2">Interior</p></div>
+                        <div class="style-card border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:border-blue-400 transition" data-style="Zen & Wellness"><img src="https://ik.imagekit.io/goeshhimawan/FotoGem%20_%20AI%20Product%20Studio/NEW%20Thumbnail/Zen%20&%20Wellness.webp?updatedAt=1759814972522" class="rounded-md w-full h-auto aspect-square object-cover" alt="Zen & Wellness thumbnail" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/200x200/e2e8f0/adb5bd?text=Error';"><p class="text-center font-medium text-sm mt-2">Zen & Wellness</p></div>
+                        <div class="style-card border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:border-blue-400 transition" data-style="Hero Campaign"><img src="https://ik.imagekit.io/goeshhimawan/FotoGem%20_%20AI%20Product%20Studio/NEW%20Thumbnail/Hero%20Campaign.webp?updatedAt=1759814972547" class="rounded-md w-full h-auto aspect-square object-cover" alt="Hero Campaign thumbnail" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/200x200/e2e8f0/adb5bd?text=Error';"><p class="text-center font-medium text-sm mt-2">Hero Campaign</p></div>
+                    </div>
+                    
+                    <div class="mt-8">
+                        <div class="w-full flex justify-between items-center text-left p-3 bg-gray-100 rounded-lg"><span class="font-semibold text-lg">Gunakan Model Foto</span><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="on-model-toggle" class="sr-only peer"><div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div></label></div>
+                        <div id="on-model-controls" class="hidden mt-4 space-y-6 p-6 border border-gray-200 rounded-lg">
+                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"><div><label class="font-medium text-sm">Preset Gaya Photoshoot</label><select id="model-preset" class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="Manual Control">Kontrol Manual</option><option value="Runway Editorial">Runway Editorial</option><option value="Commercial Lifestyle">Commercial Lifestyle</option><option value="Studio Campaign">Studio Campaign</option><option value="Dynamic Fashion Shot">Dynamic Fashion Shot</option><option value="Creative Hero Model">Creative Hero Model</option></select></div></div>
+                            <div class="pt-6 mt-6 border-t"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"><div><label class="font-medium text-sm">Jenis Kelamin</label><select id="model-gender" class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="Auto Detect">Deteksi Otomatis</option><option value="Male">Pria</option><option value="Female">Wanita</option></select></div><div><label class="font-medium text-sm">Usia</label><select id="model-age" class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="Random">Acak</option><option value="Young Adult (20-30)">Dewasa Muda (20-30)</option><option value="Teen (13-19)">Remaja (13-19)</option><option value="Adult (30-45)">Dewasa (30-45)</option><option value="Mature (45+)">Matang (45+)</option></select></div><div><label class="font-medium text-sm">Etnisitas</label><select id="model-ethnicity" class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="Random">Acak</option><option value="Indonesian">Indonesia</option><option value="Chinese-Indonesian">Tionghoa-Indonesia</option><option value="Malay">Melayu</option><option value="Javanese">Jawa</option><option value="Balinese">Bali</option><option value="Korean">Korea</option><option value="Japanese">Jepang</option><option value="Caucasian">Kaukasia</option></select></div><div><label class="font-medium text-sm">Warna Kulit</label><select id="model-skin-tone" class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="Random">Acak</option><option value="Light">Cerah</option><option value="Medium">Sedang</option><option value="Tan">Sawo Matang</option><option value="Dark">Gelap</option></select></div><div><label class="font-medium text-sm">Gaya Pakaian</label><select id="model-outfit" class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="Random">Acak</option><option value="Plain basic outfit">Pakaian Dasar Polos</option><option value="Lifestyle wear">Pakaian Lifestyle</option><option value="Formal minimal">Formal Minimal</option><option value="Sportswear">Pakaian Olahraga</option><option value="Casual trendy">Kasual Trendi</option></select></div></div>
+                                <fieldset id="model-stylistic-controls" class="mt-6 pt-6 border-t"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"><div><label class="font-medium text-sm">Pose</label><select id="model-pose" class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="Random">Acak</option><option value="Front Facing Neutral">Menghadap Depan (Netral)</option><option value="Three-Quarter Turn">Putaran Tiga Perempat</option><option value="Casual Relaxed">Santai (Kasual)</option><option value="Seated Natural">Duduk Natural</option><option value="Hand-Holding Product">Memegang Produk</option><option value="Applying Product">Mengaplikasikan Produk</option><option value="Looking Away">Melihat ke Samping</option><option value="Detail Close-Up">Fokus Detail (Close-Up)</option><option value="Dynamic Motion">Pose Dinamis</option></select></div><div><label class="font-medium text-sm">Ekspresi</label><select id="model-expression" class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="Random">Acak</option><option value="Calm neutral face">Wajah Netral Tenang</option><option value="Confident pose">Pose Percaya Diri</option></select></div><div><label class="font-medium text-sm">Fokus Kamera</label><select id="model-focus" class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="Focus on product">Fokus pada Produk</option><option value="Focus on model (full)">Fokus pada Model (Penuh)</option></select></div><div><label class="font-medium text-sm">Intensitas Makeup</label><select id="model-makeup" class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="Natural">Natural</option><option value="Glam">Glamor</option><option value="Editorial">Editorial</option></select></div></div></fieldset>
+                            </div>
+                        </div>
+                    </div>
 
-                     <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                         <button id="download-btn" class="flex-1 bg-blue-500 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-blue-600 transition">Unduh Gambar</button>
-                         <button id="regenerate-btn" class="flex-1 bg-gray-100 text-gray-800 font-semibold py-3 border border-gray-200 rounded-lg hover:bg-gray-200 transition">Buat Ulang</button>
-                         <button id="try-another-style-btn" class="flex-1 bg-gray-100 text-gray-800 font-semibold py-3 border border-gray-200 rounded-lg hover:bg-gray-200 transition">Coba Gaya Lain</button>
-                         <button id="upload-new-btn" class="flex-1 bg-gray-100 text-gray-800 font-semibold py-3 border border-gray-200 rounded-lg hover:bg-gray-200 transition">Unggah Produk Baru</button>
-                     </div>
+                    <div class="mt-8">
+                        <div class="w-full flex justify-between items-center text-left p-3 bg-gray-100 rounded-lg"><span class="font-semibold text-lg">Opsi Lanjutan (Kontrol Manual)</span><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="advanced-options-toggle" class="sr-only peer"><div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div></label></div>
+                        <div id="accordion-content" class="hidden mt-4 space-y-6 p-6 border border-gray-200 rounded-lg transition-opacity duration-300 opacity-50">
+                            <fieldset id="advanced-options-fieldset" disabled><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"><div><label class="font-medium text-sm">Suasana Pencahayaan</label><select id="adv-lighting-mood" class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="Neutral Bright">Cerah Netral</option><option value="Warm Soft">Hangat Lembut</option><option value="Cool Tone">Nuansa Dingin</option><option value="Dramatic Contrast">Kontras Dramatis</option><option value="Diffused Ambient">Cahaya Menyebar</option></select></div><div><label class="font-medium text-sm">Varian Latar</label><select id="adv-background-variant" class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="Solid">Warna Polos</option><option value="Gradient">Gradasi</option><option value="Textured">Bertekstur</option><option value="Environmental Blur">Latar Blur</option></select></div><div id="adv-bg-color-container"><label class="font-medium text-sm">Warna Aksen/Latar</label><div class="flex items-center mt-1"><input type="color" id="adv-bg-color-picker" value="#FFFFFF" class="w-10 h-10 rounded-md border border-gray-300 cursor-pointer"><input type="text" id="adv-bg-color-hex" value="#FFFFFF" class="w-full ml-2 p-2 border border-gray-300 rounded-md"></div></div><div><label class="font-medium text-sm">Jenis Shot (Komposisi)</label><select id="adv-shot-type" class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="Mid Shot">Shot Menengah</option><option value="Close-Up">Close-Up</option><option value="Full Shot">Shot Penuh</option><option value="Angled Shot">Shot Sudut</option><option value="Top View / Flatlay">Tampak Atas / Flatlay</option></select></div><div><label class="font-medium text-sm">Gaya Bayangan</label><select id="adv-shadow-style" class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="Soft Shadow">Bayangan Halus</option><option value="Hard Shadow">Bayangan Tegas</option><option value="No Shadow">Tanpa Bayangan</option><option value="Reflected Shadow">Bayangan Refleksi</option></select></div><div><label class="font-medium text-sm">Kehadiran Properti</label><select id="adv-prop-presence" class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="Minimal">Minimal</option><option value="Moderate">Sedang</option><option value="Storytelling">Storytelling</option></select></div></div><div class="mt-6"><label for="adv-custom-prompt" class="font-medium text-sm">Instruksi Tambahan (Prompt Kustom)</label><textarea id="adv-custom-prompt" class="w-full mt-1 p-2 border border-gray-300 rounded-md h-20" placeholder="contoh: tambahkan percikan air, buat produk terlihat basah"></textarea></div></fieldset>
+                        </div>
+                    </div>
+
+                    <button id="generate-btn" class="w-full bg-blue-500 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-blue-600 transition">Buat Foto Studio (1 Token)</button>
                 </div>
             </div>
 
+            <div id="result-page" class="page hidden w-full max-w-4xl">
+                <div id="processing-view" class="bg-white p-8 rounded-2xl shadow-lg w-full text-center space-y-6"><h2 class="text-2xl font-bold text-gray-900">Menciptakan foto produk studio Anda...</h2><p class="text-gray-500">Memproses foto Anda dengan FotoGem AI...</p><div class="w-full bg-gray-200 rounded-full h-4 relative overflow-hidden"><div class="absolute top-0 left-0 h-full bg-blue-500 animate-pulse" style="width: 100%;"></div></div><p class="text-sm text-gray-400">Proses ini mungkin memerlukan beberapa saat. Mohon jangan tutup jendela ini.</p></div>
+                <div id="result-view" class="hidden bg-white p-8 rounded-2xl shadow-lg w-full space-y-6"><h2 class="text-3xl font-bold text-gray-900 text-center">Foto Studio Anda Sudah Siap!</h2><div class="comparison-slider w-full max-w-2xl mx-auto aspect-square"><img src="" alt="Sebelum" class="before-image"><div class="after-image-container"><img src="" alt="Sesudah" class="after-image"></div><div class="handle-icon-wrapper" style="left: 50%;"><div class="handle-icon"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path></svg></div></div></div><div class="flex flex-col sm:flex-row gap-4 justify-center"><button id="download-btn" class="flex-1 bg-blue-500 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-blue-600 transition">Unduh Gambar</button><button id="regenerate-btn" class="flex-1 bg-gray-100 text-gray-800 font-semibold py-3 border border-gray-200 rounded-lg hover:bg-gray-200 transition">Buat Ulang (1 Token)</button><button id="try-another-style-btn" class="flex-1 bg-gray-100 text-gray-800 font-semibold py-3 border border-gray-200 rounded-lg hover:bg-gray-200 transition">Coba Gaya Lain</button><button id="upload-new-btn" class="flex-1 bg-gray-100 text-gray-800 font-semibold py-3 border border-gray-200 rounded-lg hover:bg-gray-200 transition">Unggah Produk Baru</button></div></div>
+            </div>
         </main>
         
-        <!-- Footer -->
         <footer class="w-full p-6 text-center">
             <div class="text-sm text-gray-500 space-x-6">
                 <a href="#" class="hover:text-gray-800">Tentang</a>
@@ -397,12 +154,10 @@
             </div>
         </footer>
 
-        <!-- Floating Help Button -->
         <button id="help-btn" class="fixed bottom-6 right-6 bg-white p-3 rounded-full shadow-lg border border-gray-200 hover:bg-gray-100 transition-transform transform hover:scale-110">
             <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
         </button>
 
-        <!-- Tooltip for Help -->
         <div id="help-tooltip" class="hidden fixed bottom-24 right-6 bg-white p-4 rounded-lg shadow-xl border border-gray-200 max-w-xs transition-all duration-300 opacity-0 transform translate-y-2">
             <h4 class="font-bold mb-2">Tips Unggah</h4>
             <ul class="list-disc list-inside text-sm text-gray-600 space-y-1">
@@ -413,13 +168,11 @@
             </ul>
         </div>
         
-        <!-- Toast Notification -->
         <div id="toast" class="fixed top-5 right-5 bg-green-500 text-white py-2 px-5 rounded-lg shadow-md opacity-0 transition-all duration-300 -translate-y-10">
             <p id="toast-message">Unggahan berhasil!</p>
         </div>
     </div>
     
-    <!-- Upload source choice modal -->
     <div id="upload-choice-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div class="bg-white rounded-2xl p-6 space-y-4 w-full max-w-sm">
             <h3 class="text-xl font-bold text-center text-gray-900">Pilih Sumber Foto</h3>
@@ -438,7 +191,6 @@
         </div>
     </div>
     
-    <!-- Camera View -->
     <div id="camera-view" class="hidden fixed inset-0 bg-black z-50 flex flex-col items-center justify-center">
         <video id="camera-stream" class="w-full h-full object-cover" autoplay playsinline></video>
         <canvas id="camera-canvas" class="hidden"></canvas>
@@ -448,12 +200,64 @@
         </div>
     </div>
 
-    <script>
+    <div id="auth-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl p-8 space-y-6 w-full max-w-md relative">
+            <button id="close-auth-modal-btn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl font-bold">&times;</button>
+            <h3 id="auth-title" class="text-2xl font-bold text-center text-gray-900">Masuk ke FotoGem</h3>
+            <div id="auth-error" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg text-sm"></div>
+            <form id="auth-form" class="space-y-4">
+                <input type="email" id="auth-email" placeholder="Alamat Email" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <input type="password" id="auth-password" placeholder="Kata Sandi (min. 6 karakter)" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <button type="submit" id="auth-submit-btn" class="w-full bg-blue-500 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-blue-600 transition">Masuk</button>
+            </form>
+            <p class="text-center text-sm text-gray-600">
+                <span id="auth-prompt-text">Belum punya akun?</span>
+                <a href="#" id="auth-toggle-link" class="font-semibold text-blue-500 hover:underline">Daftar Sekarang</a>
+            </p>
+        </div>
+    </div>
+    
+    <div id="no-tokens-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl p-8 space-y-6 w-full max-w-md text-center relative">
+            <button id="close-no-tokens-modal-btn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl font-bold">&times;</button>
+            <h3 class="text-2xl font-bold text-gray-900">Token Anda Habis!</h3>
+            <p class="text-gray-600">Anda telah menggunakan seluruh token gratis Anda. Untuk terus membuat gambar, silakan tambah token Anda.</p>
+            <a href="https://scalev.co" target="_blank" class="block w-full bg-green-500 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-green-600 transition">
+                Beli 100 Token di Scalev
+            </a>
+            <p class="text-xs text-gray-400 mt-2">Anda akan diarahkan ke platform partner kami untuk melakukan pembelian.</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot, updateDoc, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Your web app's Firebase configuration will be set by Vercel Environment Variables
+        const firebaseConfig = {
+            apiKey: "%VITE_FIREBASE_API_KEY%",
+            authDomain: "%VITE_FIREBASE_AUTH_DOMAIN%",
+            projectId: "%VITE_FIREBASE_PROJECT_ID%",
+            storageBucket: "%VITE_FIREBASE_STORAGE_BUCKET%",
+            messagingSenderId: "%VITE_FIREBASE_MESSAGING_SENDER_ID%",
+            appId: "%VITE_FIREBASE_APP_ID%"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
         document.addEventListener('DOMContentLoaded', () => {
             // --- App State & Constants ---
             let uploadedFiles = [];
             let detectedNiche = null;
             let cameraStream = null;
+            let currentUser = null;
+            let userTokens = 0;
+            let unsubscribeUserDoc = null; // To detach Firestore listener on logout
+            let isLoginMode = true;
 
             const NICHE_CATEGORIES = [
                 "Beauty & Personal Care", "Fashion & Apparel", "Home & Living",
@@ -463,18 +267,39 @@
             ];
             
             const NICHE_STYLE_MAP = {
-                "Beauty & Personal Care": "Clean Natural",
-                "Fashion & Apparel": "On-Model Studio",
-                "Home & Living": "Interior Aesthetic",
-                "Electronics & Gadgets": "Tech Gradient",
-                "Automotive & Tools": "Industrial Metal",
-                "Food & Beverage": "Kitchen Lifestyle",
-                "Kids & Baby": "Playful Pastel",
-                "Pets": "Lifestyle Scene", // Remains general, good fallback
-                "Travel & Outdoor": "Outdoor Natural Light",
-                "Property & Decoratives": "Interior Aesthetic",
-                "Health & Wellness": "Zen Calm",
-                "Gift & Stationery": "Flatlay Gift Box"
+                "Beauty & Personal Care": "Natural Organic",
+                "Fashion & Apparel": "Lifestyle",
+                "Home & Living": "Interior",
+                "Electronics & Gadgets": "Tech Futuristic",
+                "Automotive & Tools": "Classic Studio",
+                "Food & Beverage": "Natural Organic",
+                "Kids & Baby": "Modern Minimal",
+                "Pets": "Lifestyle",
+                "Travel & Outdoor": "Lifestyle",
+                "Property & Decoratives": "Interior",
+                "Health & Wellness": "Zen & Wellness",
+                "Gift & Stationery": "Flatlay"
+            };
+
+            const STYLE_PROMPT_MAP = {
+                "Classic Studio": "clean studio light, pure white background, soft shadow, professional product photography, high detail, minimal aesthetic, ultra-detailed textures, controlled reflection, realistic lens focus, 85mm studio lens look, photorealistic material accuracy",
+                "Natural Organic": "natural daylight, soft warm tone, wooden surface, linen texture, organic mood, nature inspired, fresh clean style, macro-level fabric texture visibility, realistic daylight falloff, bokeh depth, fine surface imperfections",
+                "Luxury Premium": "luxury lighting, black and gold palette, glossy reflection, marble background, elegant cinematic product shot, soft specular highlights, cinematic contrast ratio 1:3, glass/marble reflections rendered with physical accuracy, ultra-clean DOF",
+                "Modern Minimal": "modern minimalist studio photography, focusing on the product's form with balanced composition and negative space. Use soft, diffused lighting with subtle shadows. The color palette should be tone-on-tone harmony. No distracting decorations, real photographic depth, true-to-life textures, no CG look, natural imperfections retained",
+                "Lifestyle": "in-context lifestyle scene, natural environment, human element optional, real-life usage setup, cozy lighting, environmental lighting matching, soft focus background, depth separation between subject and product, cinematic LUT",
+                "Flatlay": "flatlay top view, creative arrangement, shadowless soft light, visual storytelling composition, minimalist props, ultra-sharp lens detail, natural daylight shadow gradient, 50mm macro lens look, crisp textures",
+                "Tech Futuristic": "futuristic gradient light, metallic reflection, cyber aesthetic, cool blue tone, modern tech background, photo-based realism, metal micro-scratch detail, volumetric lighting realism, precise exposure balance",
+                "Interior": "interior lighting, cozy home setup, wooden furniture, ambient warm tone, natural shadows, high-resolution detail, soft directional window light, realistic reflections, cinematic exposure tone-mapping",
+                "Zen & Wellness": "calm zen mood, soft diffused lighting, stone and towel texture, spa environment, peaceful color palette, ultra-fine texture of stone/towel, realistic shadow diffusion, serene daylight realism",
+                "Hero Campaign": "cinematic lighting, dramatic spotlight, product hero center, depth of field, studio-grade composition, studio smoke haze realism, volumetric light beam accuracy, ultra-high contrast dynamic range"
+            };
+
+             const MODEL_PRESET_PROMPT_MAP = {
+                "Runway Editorial": "full body framing, confident editorial stance, high-contrast soft keylight, model with a strong, assertive expression, ultra-realistic skin texture with pores, studio keylight rim balance, 4K fashion photography realism.",
+                "Commercial Lifestyle": "natural casual pose, like a commercial ad, soft natural daylight, model with a friendly, authentic expression, soft daylight tone, real human imperfections preserved, natural dynamic skin lighting.",
+                "Studio Campaign": "formal studio campaign style, professional balanced lighting (key, fill, rim), neutral backdrop, confident and polished model pose, high-end beauty retouching effect, visible microtextures, balanced color grading.",
+                "Dynamic Fashion Shot": "dynamic motion pose, as if walking or turning lightly, with subtle motion blur, cinematic keylight, and a candid expression, realistic motion captured blur, authentic photographic grain, cinematic lens aberration.",
+                "Creative Hero Model": "creative hero shot focusing on the product, with the full-body model in the center of the frame, high-contrast cinematic lighting, true photoreal lens depth, studio smoke, cinematic LUT color accuracy."
             };
 
             // --- Page Elements ---
@@ -486,7 +311,6 @@
             };
 
             // --- UI Components ---
-            // Buttons
             const getStartedBtn = document.getElementById('get-started-btn');
             const chooseStyleBtn = document.getElementById('choose-style-btn');
             const generateBtn = document.getElementById('generate-btn');
@@ -494,510 +318,56 @@
             const uploadNewBtn = document.getElementById('upload-new-btn');
             const downloadBtn = document.getElementById('download-btn');
             const regenerateBtn = document.getElementById('regenerate-btn');
-            
-            // Upload elements
+            const logoLink = document.getElementById('logo-link');
             const dropArea = document.getElementById('drop-area');
             const galleryInput = document.getElementById('gallery-input');
             const previewGrid = document.getElementById('preview-grid');
-            
-            // Upload choice modal
+            const nicheRecommendationBox = document.getElementById('niche-recommendation-box');
+            const nicheRecommendationContent = document.getElementById('niche-recommendation-content');
             const uploadChoiceModal = document.getElementById('upload-choice-modal');
             const useCameraBtn = document.getElementById('use-camera-btn');
             const useGalleryBtn = document.getElementById('use-gallery-btn');
             const cancelUploadChoiceBtn = document.getElementById('cancel-upload-choice-btn');
-            
-            // Camera View elements
             const cameraView = document.getElementById('camera-view');
             const cameraStreamElem = document.getElementById('camera-stream');
             const cameraCanvas = document.getElementById('camera-canvas');
             const captureBtn = document.getElementById('capture-btn');
             const cancelCameraBtn = document.getElementById('cancel-camera-btn');
-
-            // Style elements
             const styleCards = document.querySelectorAll('.style-card');
             const aiRecommendToggle = document.getElementById('ai-recommend-toggle');
+            const onModelToggle = document.getElementById('on-model-toggle');
+            const onModelControls = document.getElementById('on-model-controls');
+            const modelPresetSelect = document.getElementById('model-preset');
+            const modelStylisticControls = document.getElementById('model-stylistic-controls');
             const accordionContent = document.getElementById('accordion-content');
             const advancedOptionsToggle = document.getElementById('advanced-options-toggle');
             const advancedOptionsFields = document.getElementById('advanced-options-fieldset');
-            const onModelOptions = document.getElementById('on-model-options');
-            const transparentBgCheckbox = document.getElementById('adv-transparent-bg');
-            const bgColorInputs = document.getElementById('bg-color-inputs');
-
-            // Result elements
+            const backgroundVariantSelect = document.getElementById('adv-background-variant');
+            const bgColorContainer = document.getElementById('adv-bg-color-container');
             const processingView = document.getElementById('processing-view');
             const resultView = document.getElementById('result-view');
             const beforeImageElem = document.querySelector('.before-image');
             const afterImageElem = document.querySelector('.after-image');
             const comparisonSlider = document.querySelector('.comparison-slider');
-
-            // UX elements
             const helpBtn = document.getElementById('help-btn');
             const helpTooltip = document.getElementById('help-tooltip');
             const toast = document.getElementById('toast');
             const toastMessage = document.getElementById('toast-message');
 
-            // --- Page Navigation ---
-            const showPage = (pageId) => {
-                Object.values(pages).forEach(page => page.classList.add('hidden'));
-                if (pages[pageId]) {
-                    setTimeout(() => {
-                        pages[pageId].classList.remove('hidden');
-                        if (pageId === 'style' && aiRecommendToggle.checked) {
-                            applyStyleRecommendation();
-                        }
-                    }, 50);
-                }
-            };
-            
-            getStartedBtn.addEventListener('click', () => showPage('upload'));
-            chooseStyleBtn.addEventListener('click', () => showPage('style'));
-            generateBtn.addEventListener('click', async () => {
-                showPage('result');
-                await startProcessing();
-            });
-            tryAnotherStyleBtn.addEventListener('click', () => showPage('style'));
-            uploadNewBtn.addEventListener('click', () => {
-                uploadedFiles = [];
-                detectedNiche = null;
-                previewGrid.innerHTML = '';
-                previewGrid.classList.add('hidden');
-                chooseStyleBtn.disabled = true;
-                showPage('upload');
-            });
-            regenerateBtn.addEventListener('click', () => {
-                showPage('result');
-                startProcessing();
-            });
-            downloadBtn.addEventListener('click', () => {
-                const link = document.createElement('a');
-                link.href = afterImageElem.src;
-                link.download = 'hasil-fotogem.png';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            });
-            
-            // --- Toast Notifications ---
-            const showToast = (message, isSuccess = true) => {
-                toastMessage.textContent = message;
-                toast.className = `fixed top-5 right-5 text-white py-2 px-5 rounded-lg shadow-md transition-all duration-300 ${isSuccess ? 'bg-green-500' : 'bg-red-500'}`;
-                toast.classList.remove('opacity-0', '-translate-y-10');
-                
-                setTimeout(() => {
-                    toast.classList.add('opacity-0', '-translate-y-10');
-                }, 4000);
-            };
-
-            // --- Upload Event Listeners ---
-            dropArea.addEventListener('click', () => {
-                uploadChoiceModal.classList.remove('hidden');
-            });
-            
-            dropArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                dropArea.classList.add('drag-over');
-            });
-            
-            dropArea.addEventListener('dragleave', () => {
-                dropArea.classList.remove('drag-over');
-            });
-            
-            dropArea.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dropArea.classList.remove('drag-over');
-                handleFiles(e.dataTransfer.files);
-            });
-
-            const hideUploadChoiceModal = () => uploadChoiceModal.classList.add('hidden');
-
-            useCameraBtn.addEventListener('click', () => {
-                hideUploadChoiceModal();
-                startCamera();
-            });
-            useGalleryBtn.addEventListener('click', () => {
-                galleryInput.click();
-            });
-            cancelUploadChoiceBtn.addEventListener('click', hideUploadChoiceModal);
-            
-            galleryInput.addEventListener('change', (e) => {
-                hideUploadChoiceModal();
-                if (e.target.files.length > 0) {
-                    handleFiles(e.target.files);
-                }
-                e.target.value = ''; 
-            });
-
-            // --- Camera Logic (getUserMedia) ---
-            const startCamera = async () => {
-                if ('mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices) {
-                    try {
-                        const constraints = { video: { facingMode: "environment" } };
-                        cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
-                        cameraStreamElem.srcObject = cameraStream;
-                        
-                        cameraStreamElem.onloadedmetadata = () => {
-                            cameraStreamElem.play();
-                            cameraView.classList.remove('hidden');
-                        };
-
-                    } catch (err) {
-                        console.error("Camera access error:", err);
-                        showToast("Tidak bisa mengakses kamera. Pastikan Anda telah memberikan izin.", false);
-                    }
-                } else {
-                    showToast("Browser Anda tidak mendukung akses kamera.", false);
-                }
-            };
-            
-            const stopCamera = () => {
-                if (cameraStream) {
-                    cameraStream.getTracks().forEach(track => track.stop());
-                }
-                cameraView.classList.add('hidden');
-            };
-
-            captureBtn.addEventListener('click', () => {
-                const context = cameraCanvas.getContext('2d');
-                cameraCanvas.width = cameraStreamElem.videoWidth;
-                cameraCanvas.height = cameraStreamElem.videoHeight;
-                context.drawImage(cameraStreamElem, 0, 0, cameraCanvas.width, cameraCanvas.height);
-                
-                cameraCanvas.toBlob(blob => {
-                    const file = new File([blob], `capture-${Date.now()}.png`, { type: 'image/png' });
-                    handleFiles([file]);
-                }, 'image/png');
-                
-                stopCamera();
-            });
-
-            cancelCameraBtn.addEventListener('click', stopCamera);
-
-
-            // --- Upload Logic ---
-            const fileToBase64 = (file) => new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result.split(',')[1]);
-                reader.onerror = error => reject(error);
-            });
-
-            // This function is removed because niche classification is now part of the image generation process
-            // const classifyImage = async (fileData) => { ... }
-            
-            const handleFiles = (files) => {
-                const allFiles = Array.from(files);
-                let newImageFiles = allFiles.filter(file => file.type.startsWith('image/'));
-
-                if (newImageFiles.length < allFiles.length) {
-                    showToast("Beberapa file bukan gambar dan diabaikan.", false);
-                }
-                
-                if (newImageFiles.length === 0 && allFiles.length > 0) {
-                    showToast("Silakan unggah file gambar yang valid (JPG, PNG, dll).", false);
-                    return;
-                }
-
-                let successfulUploads = 0;
-                for (const file of newImageFiles) {
-                    if (uploadedFiles.length >= 5) {
-                        showToast("Anda hanya dapat mengunggah maksimal 5 foto.", false);
-                        break;
-                    }
-                    if (file.size > 10 * 1024 * 1024) {
-                        showToast(`File "${file.name}" terlalu besar (>10MB).`, false);
-                        continue;
-                    }
-                    const newFileData = { file, base64: null, objectURL: URL.createObjectURL(file) };
-                    uploadedFiles.push(newFileData);
-                    previewFile(newFileData);
-                    successfulUploads++;
-                }
-
-                if (successfulUploads > 0) {
-                    showToast(`${successfulUploads} gambar berhasil diunggah!`);
-                }
-
-                if (uploadedFiles.length > 0) {
-                    previewGrid.classList.remove('hidden');
-                    chooseStyleBtn.disabled = false;
-                }
-            };
-
-            const previewFile = (fileData) => {
-                const imgContainer = document.createElement('div');
-                imgContainer.className = 'relative group';
-                
-                const img = document.createElement('img');
-                img.src = fileData.objectURL;
-                img.className = 'w-full h-auto aspect-square object-cover rounded-lg';
-                imgContainer.appendChild(img);
-
-                const removeBtn = document.createElement('button');
-                removeBtn.innerHTML = '&times;';
-                removeBtn.className = 'absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center font-bold opacity-0 group-hover:opacity-100 transition';
-                removeBtn.onclick = () => {
-                    imgContainer.remove();
-                    uploadedFiles = uploadedFiles.filter(f => f.objectURL !== fileData.objectURL);
-                    URL.revokeObjectURL(fileData.objectURL);
-
-                    if (uploadedFiles.length === 0) {
-                        chooseStyleBtn.disabled = true;
-                        previewGrid.classList.add('hidden');
-                    }
-                };
-                imgContainer.appendChild(removeBtn);
-                previewGrid.appendChild(imgContainer);
-            };
-
-            // --- Style Page Logic ---
-            const manageOnModelOptionsVisibility = () => {
-                const selectedStyle = document.querySelector('.style-card.selected')?.dataset.style;
-                const advancedEnabled = advancedOptionsToggle.checked;
-
-                if (selectedStyle === 'On-Model Studio' && advancedEnabled) {
-                    onModelOptions.classList.remove('hidden');
-                } else {
-                    onModelOptions.classList.add('hidden');
-                }
-            };
-            
-            // This is now simplified as we don't have automatic niche detection on the frontend
-            const applyStyleRecommendation = () => {
-                 // Placeholder for potential future logic, but currently does nothing
-                 // The default selection is handled by the 'selected' class in HTML
-            };
-
-            aiRecommendToggle.addEventListener('change', () => {
-                if (aiRecommendToggle.checked) {
-                    applyStyleRecommendation();
-                }
-            });
-
-            styleCards.forEach(card => {
-                card.addEventListener('click', (event) => {
-                    styleCards.forEach(c => c.classList.remove('selected'));
-                    card.classList.add('selected');
-                    aiRecommendToggle.checked = false; 
-                    manageOnModelOptionsVisibility();
-                });
-            });
-
-            advancedOptionsToggle.addEventListener('change', () => {
-                const isEnabled = advancedOptionsToggle.checked;
-                advancedOptionsFields.disabled = !isEnabled;
-                accordionContent.style.opacity = isEnabled ? 1 : 0.5;
-
-                if (isEnabled) {
-                    accordionContent.classList.remove('hidden');
-                } else {
-                    accordionContent.classList.add('hidden');
-                }
-                manageOnModelOptionsVisibility();
-            });
-            
-            transparentBgCheckbox.addEventListener('change', () => {
-                const isTransparent = transparentBgCheckbox.checked;
-                bgColorInputs.style.opacity = isTransparent ? 0.5 : 1;
-                document.getElementById('adv-bg-color-picker').disabled = isTransparent;
-                document.getElementById('adv-bg-color-hex').disabled = isTransparent;
-            });
-
-            document.getElementById('adv-bg-color-picker').addEventListener('input', (e) => {
-                document.getElementById('adv-bg-color-hex').value = e.target.value.toUpperCase();
-            });
-            document.getElementById('adv-bg-color-hex').addEventListener('change', (e) => {
-                document.getElementById('adv-bg-color-picker').value = e.target.value;
-            });
-
-            // --- Generation Logic ---
-            const startProcessing = async () => {
-                resultView.classList.add('hidden');
-                processingView.classList.remove('hidden');
-
-                if (uploadedFiles.length === 0) {
-                    showToast("Silakan unggah gambar terlebih dahulu.", false);
-                    showPage('upload');
-                    return;
-                }
-                
-                const mainImageFile = uploadedFiles[0];
-                if (!mainImageFile.base64) {
-                    mainImageFile.base64 = await fileToBase64(mainImageFile.file);
-                }
-                
-                beforeImageElem.src = mainImageFile.objectURL;
-                
-                const selectedStyleCard = document.querySelector('.style-card.selected');
-                const style = selectedStyleCard ? selectedStyleCard.dataset.style : 'Minimalist White';
-                
-                let userPrompt = `Generate a professional, high-quality studio product photo of the item in the image. CRUCIAL INSTRUCTION: Do NOT change the product from the original image in any way. Its color, shape, size, texture, and any logos or text must be perfectly preserved. Only change the background, lighting, and environment around the product. The final image must have a strict 1:1 square aspect ratio.`;
-                
-                if (advancedOptionsToggle.checked) {
-                    const shotType = document.getElementById('adv-shot-type').value;
-                    const shadow = document.getElementById('adv-shadow').value;
-                    const reflection = document.getElementById('adv-reflection').value;
-                    const lighting = document.getElementById('adv-lighting').value;
-                    const isTransparent = document.getElementById('adv-transparent-bg').checked;
-                    const bgColor = document.getElementById('adv-bg-color-hex').value;
-                    const customPrompt = document.getElementById('adv-custom-prompt').value;
-
-                    let advancedPrompt = ` The base style is '${style}', but modify it with the following details:`;
-                    
-                    advancedPrompt += ` The shot type should be a '${shotType}'.`;
-                    advancedPrompt += ` Use a ${shadow.toLowerCase()} shadow.`;
-
-                    if (reflection === 'On') {
-                        advancedPrompt += ` The surface should have a reflection.`;
-                    } else {
-                        advancedPrompt += ` There should be no reflection.`;
-                    }
-                    advancedPrompt += ` The lighting mood should be ${lighting.toLowerCase()}.`;
-
-                    if (isTransparent) {
-                        advancedPrompt += ` The image MUST have a transparent background.`;
-                    } else {
-                        if (style.includes('Scene') || style.includes('Lifestyle') || style.includes('Interior')) {
-                             advancedPrompt += ` The overall color palette of the scene should be dominated by shades of ${bgColor}.`;
-                        } else {
-                            advancedPrompt += ` The background color must be a solid color, exactly ${bgColor}.`;
-                        }
-                    }
-                    
-                    if (style === 'On-Model Studio') {
-                        const onModelVariation = document.getElementById('adv-on-model-variation').value;
-                        advancedPrompt += ` The on-model variation should be: '${onModelVariation}', featuring an Indonesian model.`;
-                    }
-
-                    if (customPrompt.trim() !== '') {
-                        advancedPrompt += ` Additional user instructions: ${customPrompt}.`;
-                    }
-                    userPrompt += advancedPrompt;
-
-                } else {
-                    userPrompt += `The desired style is: "${style}".`;
-                     if (style === 'On-Model Studio') {
-                         userPrompt += " The model must be of Indonesian ethnicity (can be Javanese, Sundanese, Batak, Papuan, etc.), representing the diversity of Indonesia.";
-                     }
-                }
-                
-                comparisonSlider.classList.add('aspect-square');
-
-                try {
-                    // MODIFIED: Call our own backend proxy instead of Google's API directly
-                    const apiUrl = '/api/generate';
-
-                    const payload = {
-                        userPrompt: userPrompt,
-                        mainImage: {
-                            mimeType: mainImageFile.file.type,
-                            base64: mainImageFile.base64,
-                        }
-                    };
-                    
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    const result = await response.json();
-
-                    if (!response.ok) {
-                        throw new Error(result.error || "Terjadi kesalahan API yang tidak diketahui.");
-                    }
-                    
-                    const candidate = result.candidates?.[0];
-
-                    if (!candidate) {
-                        const blockReason = result.promptFeedback?.blockReason;
-                        if (blockReason) {
-                            throw new Error(`Gambar tidak dapat dibuat karena konten diblokir (${blockReason}). Coba gambar atau prompt lain.`);
-                        } else {
-                            throw new Error("API tidak memberikan respons yang valid.");
-                        }
-                    }
-
-                    if (candidate.finishReason && candidate.finishReason !== 'STOP') {
-                        throw new Error(`Proses dihentikan karena: ${candidate.finishReason}.`);
-                    }
-
-                    const base64Data = candidate.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
-
-                    if (!base64Data) throw new Error("Tidak ada data gambar yang diterima dari API.");
-
-                    afterImageElem.src = `data:image/png;base64,${base64Data}`;
-                    processingView.classList.add('hidden');
-                    resultView.classList.remove('hidden');
-
-                } catch (error) {
-                    console.error("API Call Failed:", error);
-                    showToast(`Terjadi Kesalahan: ${error.message}`, false);
-                    showPage('style');
-                }
-            };
-
-            // --- Before/After Slider ---
-            let isDragging = false;
-            
-            const moveSlider = (xPosition) => {
-                const containerRect = comparisonSlider.getBoundingClientRect();
-                let percentage = ((xPosition - containerRect.left) / containerRect.width) * 100;
-                percentage = Math.max(0, Math.min(100, percentage)); 
-            
-                const afterImageContainer = comparisonSlider.querySelector('.after-image-container');
-                const handleWrapper = comparisonSlider.querySelector('.handle-icon-wrapper');
-            
-                afterImageContainer.style.clipPath = `polygon(0 0, ${percentage}% 0, ${percentage}% 100%, 0 100%)`;
-                handleWrapper.style.left = `${percentage}%`;
-            };
-
-            comparisonSlider.addEventListener('mousedown', (e) => {
-                e.preventDefault();
-                isDragging = true;
-                moveSlider(e.clientX);
-            });
-            
-            comparisonSlider.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                isDragging = true;
-                moveSlider(e.touches[0].clientX);
-            });
-
-            window.addEventListener('mouseup', () => { isDragging = false; });
-            window.addEventListener('touchend', () => { isDragging = false; });
-            window.addEventListener('mousemove', (e) => { if (isDragging) { moveSlider(e.clientX); } });
-            window.addEventListener('touchmove', (e) => { if (isDragging) { moveSlider(e.touches[0].clientX); } });
-
-            // --- Help Button Logic ---
-            helpBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const isHidden = helpTooltip.classList.contains('hidden');
-                if (isHidden) {
-                    helpTooltip.classList.remove('hidden');
-                    setTimeout(() => {
-                        helpTooltip.classList.remove('opacity-0', 'translate-y-2');
-                    }, 10);
-                } else {
-                    helpTooltip.classList.add('opacity-0', 'translate-y-2');
-                    setTimeout(() => {
-                        helpTooltip.classList.add('hidden');
-                    }, 300);
-                }
-            });
-
-            document.addEventListener('click', () => {
-                 if (!helpTooltip.classList.contains('hidden')) {
-                       helpTooltip.classList.add('opacity-0', 'translate-y-2');
-                    setTimeout(() => {
-                        helpTooltip.classList.add('hidden');
-                    }, 300);
-                 }
-            });
-            
-            // --- Initial state ---
-            showPage('landing');
-        });
-    </script>
-</body>
-</html>
-
+            // --- AUTH UI Elements ---
+            const authModal = document.getElementById('auth-modal');
+            const noTokensModal = document.getElementById('no-tokens-modal');
+            const loginBtn = document.getElementById('login-btn');
+            const logoutBtn = document.getElementById('logout-btn');
+            const userInfoDiv = document.getElementById('user-info');
+            const userEmailP = document.getElementById('user-email');
+            const tokenCountSpan = document.getElementById('token-count');
+            const authForm = document.getElementById('auth-form');
+            const authEmailInput = document.getElementById('auth-email');
+            const authPasswordInput = document.getElementById('auth-password');
+            const authTitle = document.getElementById('auth-title');
+            const authSubmitBtn = document.getElementById('auth-submit-btn');
+            const authPromptText = document.getElementById('auth-prompt-text');
+            const authToggleLink = document.getElementById('auth-toggle-link');
+            const closeAuthModalBtn = document.getElementById('close-auth-modal-btn');
+            const closeNoTokensModal
