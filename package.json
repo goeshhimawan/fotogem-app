@@ -1,9 +1,13 @@
 {
-  "name": "fotogem-backend",
+  "name": "fotogem-app",
   "version": "1.0.0",
-  "description": "Webhook handler for FotoGem",
+  "description": "FotoGem Web App",
   "main": "api/scalev-webhook.js",
+  "scripts": {
+    "build": "sed -i 's|%VITE_FIREBASE_API_KEY%|$VITE_FIREBASE_API_KEY|g; s|%VITE_FIREBASE_AUTH_DOMAIN%|$VITE_FIREBASE_AUTH_DOMAIN|g; s|%VITE_FIREBASE_PROJECT_ID%|$VITE_FIREBASE_PROJECT_ID|g; s|%VITE_FIREBASE_STORAGE_BUCKET%|$VITE_FIREBASE_STORAGE_BUCKET|g; s|%VITE_FIREBASE_MESSAGING_SENDER_ID%|$VITE_FIREBASE_MESSAGING_SENDER_ID|g; s|%VITE_FIREBASE_APP_ID%|$VITE_FIREBASE_APP_ID|g' index.html"
+  },
   "dependencies": {
     "firebase-admin": "^12.0.0"
   }
 }
+
