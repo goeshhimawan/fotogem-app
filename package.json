@@ -1,0 +1,16 @@
+{
+  "name": "fotogem-app",
+  "version": "1.0.0",
+  "description": "FotoGem AI Application with Vercel deployment.",
+  "main": "index.html",
+  "scripts": {
+    "start": "serve",
+    "build": "echo 'No build step required for static assets'"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.0.0"
+  },
+  "devDependencies": {
+    "serve": "^14.2.1"
+  }
+}
