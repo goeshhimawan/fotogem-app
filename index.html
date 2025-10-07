@@ -594,7 +594,7 @@
                     if (!fileData.base64) {
                         fileData.base64 = await fileToBase64(fileData.file);
                     }
-                    const apiKey = "";
+                    const apiKey = "%VITE_GEMINI_API_KEY%"; // Use Gemini key for classification
                     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                     const prompt = `Analisis produk dalam gambar ini dan klasifikasikan ke dalam SATU dari kategori berikut: ${NICHE_CATEGORIES.join(", ")}. Balas hanya dengan nama kategori, tanpa teks atau tanda baca tambahan.`;
                     const payload = {
@@ -734,6 +734,7 @@
                 try {
                     await updateDoc(userDocRef, { tokens: increment(-1) });
                 } catch (e) {
+                    console.error("Token update failed:", e);
                     showToast("Gagal memperbarui token. Coba lagi.", false);
                     showPage('style');
                     return;
@@ -747,7 +748,7 @@
                     beforeImageElem.src = uploadedFiles[0].objectURL;
                     const finalPrompt = buildFinalPrompt();
 
-                    const apiKey = "";
+                    const apiKey = "%VITE_GEMINI_API_KEY%";
                     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${apiKey}`;
                     const payload = {
                         contents: [{ parts: [{ text: finalPrompt }, ...imageParts] }],
@@ -755,10 +756,20 @@
                     };
                     
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    if (!response.ok) { const err = await response.json(); throw new Error(err.error?.message || "Terjadi kesalahan API."); }
+                    if (!response.ok) { 
+                        const err = await response.json(); 
+                        throw new Error(err.error?.message || "Terjadi kesalahan API yang tidak diketahui."); 
+                    }
                     const result = await response.json();
+                    
+                    if (result.promptFeedback && result.promptFeedback.blockReason) {
+                        throw new Error(`Permintaan diblokir karena: ${result.promptFeedback.blockReason}. Coba gambar atau prompt yang berbeda.`);
+                    }
+
                     const base64Data = result.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
-                    if (!base64Data) throw new Error("API tidak memberikan data gambar.");
+                    if (!base64Data) {
+                         throw new Error("API tidak memberikan data gambar yang valid.");
+                    }
 
                     afterImageElem.src = `data:image/png;base64,${base64Data}`;
                     processingView.classList.add('hidden');
