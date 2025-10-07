@@ -27,10 +27,21 @@ const db = admin.firestore();
 
 // The main function that handles requests
 export default async function handler(req, res) {
+  const receivedSecret = req.headers['x-scalev-secret'] || "---SECRET TIDAK DITERIMA---";
+  const storedSecret = process.env.SCALEV_WEBHOOK_SECRET || "---SECRET TIDAK DISIMPAN DI VERCEL---";
+
+  // --- KODE DEBUGGING DIMULAI ---
+  // Kode ini akan mencetak perbandingan kunci rahasia ke log Vercel Anda
+  console.log("========================================");
+  console.log("MEMERIKSA KUNCI RAHASIA SCALEV");
+  console.log(`Kunci Diterima dari Scalev (5 awal): ${receivedSecret.substring(0, 5)}...`);
+  console.log(`Kunci Tersimpan di Vercel (5 awal): ${storedSecret.substring(0, 5)}...`);
+  console.log(`Apakah kedua kunci SAMA PERSIS? : ${receivedSecret === storedSecret}`);
+  console.log("========================================");
+  // --- KODE DEBUGGING SELESAI ---
+
   // 1. Security Check: Ensure the request comes from Scalev
-  // We use a "secret key" that you set in both Vercel and Scalev
-  const scalevSecret = req.headers['x-scalev-secret'];
-  if (scalevSecret !== process.env.SCALEV_WEBHOOK_SECRET) {
+  if (receivedSecret !== storedSecret) {
     return res.status(401).send('Unauthorized: Invalid secret key.');
   }
 
@@ -41,8 +52,6 @@ export default async function handler(req, res) {
 
   try {
     // 3. Get data from Scalev's request body
-    // IMPORTANT: Check Scalev's documentation for the actual payload structure.
-    // This is an example based on your product.
     const { customer_email, product_name } = req.body;
 
     if (!customer_email || !product_name) {
@@ -54,7 +63,6 @@ export default async function handler(req, res) {
     if (product_name === "Akses FotoGem") {
         tokensToAdd = 100;
     } else {
-        // You can add more products here later
         console.log(`Product "${product_name}" not recognized for token assignment.`);
         return res.status(200).send('OK: Product not relevant for tokens.');
     }
@@ -65,7 +73,6 @@ export default async function handler(req, res) {
 
     if (snapshot.empty) {
       console.log(`Webhook Error: User not found with email: ${customer_email}`);
-      // Return 200 OK so Scalev doesn't retry. The issue is on the user's side (e.g., typo in email).
       return res.status(200).send('OK: User not found, but webhook acknowledged.');
     }
 
@@ -83,4 +90,23 @@ export default async function handler(req, res) {
     return res.status(500).send('Internal Server Error');
   }
 }
+```
+
+### Langkah 2: Uji Coba Terakhir
+
+1.  Simpan kode baru di atas ke GitHub. Vercel akan otomatis melakukan **deployment baru**.
+2.  Tunggu sampai deployment selesai dan statusnya **Ready**.
+3.  Buka tab **Logs** di Vercel.
+4.  Buka tab Scalev, lalu klik **Save** untuk memicu error.
+5.  **Segera kembali ke tab Logs Vercel.**
+
+Kali ini, Anda akan melihat pesan log baru yang saya buat. Pesan itu akan terlihat seperti ini:
+
+```
+========================================
+MEMERIKSA KUNCI RAHASIA SCALEV
+Kunci Diterima dari Scalev (5 awal): st5Dp...
+Kunci Tersimpan di Vercel (5 awal): 12JJS...
+Apakah kedua kunci SAMA PERSIS? : false
+========================================
 
