@@ -33,14 +33,22 @@ module.exports = async (req, res) => {
   }
 
   try {
-    // 3. Get data from Scalev's request body
-    const { customer_email, product_name } = req.body;
+    const { event, customer_email, product_name } = req.body;
 
+    // --- PERBAIKAN BERDASARKAN DOKUMENTASI SCALEV ---
+    // 3. Handle the initial test event from Scalev
+    if (event === "business.test_event") {
+      console.log("Received Scalev test event. Responding with 200 OK.");
+      return res.status(200).send('OK: Test event received successfully.');
+    }
+    // --- AKHIR PERBAIKAN ---
+
+    // 4. Handle actual order events
     if (!customer_email || !product_name) {
-      return res.status(400).send('Bad Request: Missing customer_email or product_name.');
+      return res.status(400).send('Bad Request: Missing customer_email or product_name for an order event.');
     }
 
-    // 4. Determine how many tokens to add
+    // 5. Determine how many tokens to add
     let tokensToAdd = 0;
     if (product_name === "Akses FotoGem") {
       tokensToAdd = 100;
@@ -49,7 +57,7 @@ module.exports = async (req, res) => {
       return res.status(200).send('OK: Product not relevant for tokens.');
     }
 
-    // 5. Find the user in Firestore by their email
+    // 6. Find the user in Firestore by their email
     const usersRef = db.collection('users');
     const snapshot = await usersRef.where('email', '==', customer_email).limit(1).get();
 
@@ -58,7 +66,7 @@ module.exports = async (req, res) => {
       return res.status(200).send('OK: User not found, but webhook acknowledged.');
     }
 
-    // 6. Update the user's token count
+    // 7. Update the user's token count
     const userDoc = snapshot.docs[0];
     await userDoc.ref.update({
       tokens: admin.firestore.FieldValue.increment(tokensToAdd)
@@ -72,4 +80,3 @@ module.exports = async (req, res) => {
     return res.status(500).send('Internal Server Error');
   }
 };
-
