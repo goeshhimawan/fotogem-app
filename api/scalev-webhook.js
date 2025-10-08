@@ -3,8 +3,8 @@
 const crypto = require('crypto');
 const admin = require('firebase-admin');
 
+// ... (kode inisialisasi Firebase tetap sama) ...
 const privateKey = process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n');
-
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert({
@@ -14,15 +14,8 @@ if (!admin.apps.length) {
     }),
   });
 }
-
 const db = admin.firestore();
-
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
+export const config = { api: { bodyParser: false } };
 const getRawBody = (req) => {
   return new Promise((resolve, reject) => {
     const chunks = [];
@@ -31,6 +24,7 @@ const getRawBody = (req) => {
     req.on('error', (err) => reject(err));
   });
 };
+// ... (kode inisialisasi Firebase tetap sama) ...
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
@@ -41,26 +35,14 @@ module.exports = async (req, res) => {
   const body = JSON.parse(rawBody.toString());
 
   try {
+    // ... (kode verifikasi signature tetap sama) ...
     const receivedSignature = req.headers['x-scalev-hmac-sha256'];
     const signingSecret = process.env.SCALEV_WEBHOOK_SECRET;
-
-    if (!receivedSignature) {
-        return res.status(401).send('Unauthorized: Signature missing.');
-    }
-      
-    const calculatedSignature = crypto
-      .createHmac('sha256', signingSecret)
-      .update(rawBody)
-      .digest('base64');
-      
-    const areSignaturesEqual = crypto.timingSafeEqual(
-        Buffer.from(receivedSignature, 'base64'),
-        Buffer.from(calculatedSignature, 'base64')
-    );
-
-    if (!areSignaturesEqual) {
-      return res.status(401).send('Unauthorized: Invalid signature.');
-    }
+    if (!receivedSignature) { return res.status(401).send('Unauthorized: Signature missing.'); }
+    const calculatedSignature = crypto.createHmac('sha256', signingSecret).update(rawBody).digest('base64');
+    const areSignaturesEqual = crypto.timingSafeEqual(Buffer.from(receivedSignature, 'base64'), Buffer.from(calculatedSignature, 'base64'));
+    if (!areSignaturesEqual) { return res.status(401).send('Unauthorized: Invalid signature.'); }
+    // ... (kode verifikasi signature tetap sama) ...
     
     const { event, data } = body;
 
@@ -69,19 +51,17 @@ module.exports = async (req, res) => {
       return res.status(200).send('OK: Test event received successfully.');
     }
 
-    // --- PERUBAHAN UTAMA DIMULAI DI SINI ---
+    // --- PERUBAHAN UTAMA ADA DI SINI ---
+    const acceptedEvents = ['order.status_changed', 'order.payment_status_changed'];
 
-    // Cek apakah eventnya relevan dan statusnya 'completed'
-    if (event !== 'order.status_changed' || data.status !== 'completed') {
-        console.log(`Ignoring event ${event} with status ${data.status}.`);
+    // Cek apakah eventnya relevan DAN statusnya 'completed'
+    if (!acceptedEvents.includes(event) || data.status !== 'completed') {
+        console.log(`Ignoring event "${event}" with status "${data.status}".`);
         return res.status(200).send('OK: Event not relevant.');
     }
 
-    // Ambil detail dari 'data'. Scalev seharusnya menyertakan customer & product di sini.
-    // NOTE: Sesuaikan nama field jika berbeda di payload asli Scalev.
     const customer_email = data.customer ? data.customer.email : null;
     const product_name = data.products && data.products.length > 0 ? data.products[0].name : null;
-
 
     if (!customer_email || !product_name) {
       console.error("Webhook payload is missing customer email or product name.", data);
@@ -89,7 +69,7 @@ module.exports = async (req, res) => {
     }
 
     let tokensToAdd = 0;
-    if (product_name === "Akses FotoGem") { // Pastikan nama produk di Scalev persis seperti ini
+    if (product_name === "Akses FotoGem") {
       tokensToAdd = 100;
     } else {
       console.log(`Product "${product_name}" not recognized for token assignment.`);
