@@ -101,7 +101,7 @@
             <!-- Step 3: Choose Style Page -->
             <div id="style-page" class="page hidden w-full max-w-5xl">
                  <div class="bg-white p-8 rounded-2xl shadow-lg w-full space-y-8">
-                     <div>
+                      <div>
                         <h2 class="text-3xl font-bold text-gray-900 text-center">Pilih Gaya Studio Anda</h2>
                         <p class="text-gray-500 mt-2 text-center">Pilih preset atau biarkan AI merekomendasikannya untuk Anda.</p>
                     </div>
@@ -188,11 +188,11 @@
             <p class="text-center text-gray-500 text-sm">Ambil foto baru atau pilih dari galeri Anda.</p>
             <div class="space-y-3 pt-2">
                 <button id="use-camera-btn" class="w-full flex items-center justify-center gap-3 bg-blue-500 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-blue-600 transition">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24" 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                     Ambil Foto dari Kamera
                 </button>
                 <button id="use-gallery-btn" class="w-full flex items-center justify-center gap-3 bg-gray-100 text-gray-800 font-semibold py-3 border border-gray-200 rounded-lg hover:bg-gray-200 transition">
-                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24" 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                     Pilih dari Galeri
                 </button>
                 <button id="cancel-upload-choice-btn" class="w-full text-gray-500 font-medium py-2 mt-2 hover:text-gray-800 transition">Batal</button>
@@ -270,6 +270,9 @@
             let unsubscribeUserDoc = null; // To detach Firestore listener on logout
             let isLoginMode = true;
 
+            // NEW: Ultimate prompt for skin and photo realism
+            const ULTIMATE_SKIN_AND_PHOTO_PROMPT = "Create a hyperrealistic professional photograph. Render natural human skin with extreme fidelity. Every micro-detail is crucial: visible pores, fine micro-wrinkles, subtle blemishes, and barely perceptible vellus hair (peach fuzz) must be present. Preserve all natural micro-textures and skin grain, including subtle shadows in skin creases. The skin's coloration must be authentic, showing natural variations and slight, realistic color unevenness. Master the physics of light on skin: highlight its natural diffusion and translucency (subsurface scattering), and render the natural gloss from skin oil. CRUCIAL: Absolutely no airbrushing, smoothing, or artificial blurring. The result must be free of any plastic, doll-like, or CG look. The image should emulate a high-end camera capture: soft photographic grain, a true optical depth of field, balanced exposure tone-mapping, cinematic natural lighting, physically accurate shadow softness, and a filmic color response curve. The final output must be an unretouched, authentic photograph comparable to a high-fashion beauty campaign.";
+
             const NICHE_CATEGORIES = [
                 "Beauty & Personal Care", "Fashion & Apparel", "Home & Living",
                 "Electronics & Gadgets", "Automotive & Tools", "Food & Beverage",
@@ -305,12 +308,13 @@
                 "Hero Campaign": "cinematic lighting, dramatic spotlight, product hero center, depth of field, studio-grade composition, studio smoke haze realism, volumetric light beam accuracy, ultra-high contrast dynamic range"
             };
 
-             const MODEL_PRESET_PROMPT_MAP = {
-                "Runway Editorial": "full body framing, confident editorial stance, high-contrast soft keylight, model with a strong, assertive expression, ultra-realistic skin texture with pores, studio keylight rim balance, 4K fashion photography realism.",
-                "Commercial Lifestyle": "natural casual pose, like a commercial ad, soft natural daylight, model with a friendly, authentic expression, soft daylight tone, real human imperfections preserved, natural dynamic skin lighting.",
-                "Studio Campaign": "formal studio campaign style, professional balanced lighting (key, fill, rim), neutral backdrop, confident and polished model pose, high-end beauty retouching effect, visible microtextures, balanced color grading.",
-                "Dynamic Fashion Shot": "dynamic motion pose, as if walking or turning lightly, with subtle motion blur, cinematic keylight, and a candid expression, realistic motion captured blur, authentic photographic grain, cinematic lens aberration.",
-                "Creative Hero Model": "creative hero shot focusing on the product, with the full-body model in the center of the frame, high-contrast cinematic lighting, true photoreal lens depth, studio smoke, cinematic LUT color accuracy."
+            // UPDATED: Model presets now use the ultimate realism prompt
+            const MODEL_PRESET_PROMPT_MAP = {
+                "Runway Editorial": `full body framing, confident editorial stance, high-contrast soft keylight, model with a strong, assertive expression. ${ULTIMATE_SKIN_AND_PHOTO_PROMPT} 4K fashion photography realism.`,
+                "Commercial Lifestyle": `natural casual pose, like a commercial ad, soft natural daylight, model with a friendly, authentic expression, soft daylight tone. ${ULTIMATE_SKIN_AND_PHOTO_PROMPT} Natural dynamic skin lighting.`,
+                "Studio Campaign": `formal studio campaign style, professional balanced lighting (key, fill, rim), neutral backdrop, confident and polished model pose. ${ULTIMATE_SKIN_AND_PHOTO_PROMPT} Balanced color grading.`,
+                "Dynamic Fashion Shot": `dynamic motion pose, as if walking or turning lightly, with subtle motion blur, cinematic keylight, and a candid expression. ${ULTIMATE_SKIN_AND_PHOTO_PROMPT} Realistic motion captured blur.`,
+                "Creative Hero Model": `creative hero shot focusing on the product, with the full-body model in the center of the frame, high-contrast cinematic lighting. ${ULTIMATE_SKIN_AND_PHOTO_PROMPT} Studio smoke, cinematic LUT color accuracy.`
             };
 
 
@@ -751,9 +755,7 @@
 
                     const apiKey = "%VITE_GEMINI_API_KEY%";
 
-                    // --- DEBUGGING LINE ---
-                    console.log("Mencoba menggunakan Gemini API Key (untuk generate):", apiKey);
-                    // --- END DEBUGGING ---
+                    console.log("Final Prompt:", finalPrompt); // For debugging the final prompt
 
                     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${apiKey}`;
                     const payload = {
@@ -789,6 +791,7 @@
                 }
             }
             
+            // UPDATED: This function now builds the most advanced prompt
             const buildFinalPrompt = () => {
                 const selectedStyleCard = document.querySelector('.style-card.selected');
                 const style = selectedStyleCard ? selectedStyleCard.dataset.style : 'Classic Studio';
@@ -812,9 +815,12 @@
                     if (skinTone !== 'Random') modelPrompt += `Skin Tone: ${skinTone}. `;
                     const outfit = document.getElementById('model-outfit').value;
                     if (outfit !== 'Random') modelPrompt += `Outfit: ${outfit}. `;
+
                     if (modelPreset !== 'Manual Control') {
                         modelPrompt += MODEL_PRESET_PROMPT_MAP[modelPreset] || '';
                     } else {
+                        // Add the ultimate prompt for manual control
+                        modelPrompt += ` ${ULTIMATE_SKIN_AND_PHOTO_PROMPT} `;
                         const pose = document.getElementById('model-pose').value;
                         if (pose !== 'Random') modelPrompt += `Pose: ${pose}. `;
                         const expression = document.getElementById('model-expression').value;
@@ -823,6 +829,7 @@
                         modelPrompt += `Makeup: ${document.getElementById('model-makeup').value}. `;
                     }
                 }
+
                 if (advancedOptionsToggle.checked) {
                     const lightingMood = document.getElementById('adv-lighting-mood').value;
                     const backgroundVariant = document.getElementById('adv-background-variant').value;
@@ -881,7 +888,7 @@
             });
             document.addEventListener('click', () => {
                  if (!helpTooltip.classList.contains('hidden')) {
-                     helpTooltip.classList.add('opacity-0', 'translate-y-2');
+                      helpTooltip.classList.add('opacity-0', 'translate-y-2');
                     setTimeout(() => helpTooltip.classList.add('hidden'), 300);
                  }
             });
@@ -892,4 +899,3 @@
     </script>
 </body>
 </html>
-
