@@ -34,6 +34,7 @@ module.exports = async (req, res) => {
   const body = JSON.parse(rawBody.toString());
 
   try {
+    // Verifikasi HMAC Signature
     const receivedSignature = req.headers['x-scalev-hmac-sha256'];
     const signingSecret = process.env.SCALEV_WEBHOOK_SECRET;
     if (!receivedSignature) { return res.status(401).send('Unauthorized: Signature missing.'); }
@@ -43,49 +44,74 @@ module.exports = async (req, res) => {
     
     const { event, data } = body;
 
-    if (event === "business.test_event") {
-      console.log("Received Scalev test event. Responding with 200 OK.");
-      return res.status(200).send('OK: Test event received successfully.');
+    // --- LOGIKA BARU BERDASARKAN EVENT ---
+
+    // 1. Menangani saat order baru dibuat
+    if (event === 'order.created') {
+      const order_id = data.order_id;
+      const customer_email = data.customer ? data.customer.email : null;
+      const product_name = data.orderlines && data.orderlines.length > 0 ? data.orderlines[0].product_name : null;
+
+      if (!order_id || !customer_email || product_name !== "Akses FotoGem") {
+        console.log('Ignoring order.created event: missing data or not the right product.');
+        return res.status(200).send('OK: Event order.created received but not relevant.');
+      }
+
+      // Simpan info order ke Firestore untuk diproses nanti saat pembayaran
+      const pendingOrderRef = db.collection('pending_orders').doc(order_id);
+      await pendingOrderRef.set({
+        customerEmail: customer_email,
+        productName: product_name,
+        createdAt: new Date(),
+        status: 'pending'
+      });
+      
+      console.log(`Order ${order_id} for ${customer_email} has been saved as pending.`);
+      return res.status(200).send('OK: Pending order logged.');
     }
 
-    // --- PERUBAHAN FINAL ADA DI SINI ---
-    const acceptedEvents = ['order.status_changed', 'order.payment_status_changed'];
+    // 2. Menangani saat status pembayaran berubah
+    if (event === 'order.payment_status_changed' && data.payment_status === 'paid') {
+      const order_id = data.order_id;
+      if (!order_id) {
+        return res.status(400).send('Bad Request: order_id missing in payment event.');
+      }
 
-    // 1. Menggunakan 'data.payment_status' dan mengecek 'paid'
-    if (!acceptedEvents.includes(event) || data.payment_status !== 'paid') {
-        console.log(`Ignoring event "${event}" with payment_status "${data.payment_status}".`);
-        return res.status(200).send('OK: Event not relevant.');
+      const pendingOrderRef = db.collection('pending_orders').doc(order_id);
+      const orderDoc = await pendingOrderRef.get();
+
+      if (!orderDoc.exists) {
+        console.log(`Payment received for order ${order_id}, but no pending order was found. It might have been processed already or is not a FotoGem order.`);
+        return res.status(200).send('OK: No pending order found.');
+      }
+
+      const { customerEmail } = orderDoc.data();
+      const tokensToAdd = 100;
+
+      const usersRef = db.collection('users');
+      const snapshot = await usersRef.where('email', '==', customerEmail).limit(1).get();
+
+      if (snapshot.empty) {
+        console.log(`Webhook Error: User not found with email: ${customerEmail}`);
+        // Hapus pending order agar tidak menggantung
+        await pendingOrderRef.delete();
+        return res.status(200).send('OK: User not found, but webhook acknowledged.');
+      }
+
+      const userDoc = snapshot.docs[0];
+      await userDoc.ref.update({
+        tokens: admin.firestore.FieldValue.increment(tokensToAdd)
+      });
+
+      // Hapus dokumen dari pending_orders setelah berhasil diproses
+      await pendingOrderRef.delete();
+
+      console.log(`Success: Added ${tokensToAdd} tokens to ${customerEmail}`);
+      return res.status(200).send('Success: Tokens added.');
     }
 
-    // 2. Mengambil email dari lokasi yang benar
-    const customer_email = data.payment_status_history && data.payment_status_history.length > 0 
-      ? data.payment_status_history[0].by.email 
-      : null;
-
-    // Cek apakah email ditemukan
-    if (!customer_email) {
-      console.error("Could not find customer email in the webhook payload.", data);
-      return res.status(400).send('Bad Request: Customer email not found in payload.');
-    }
-
-    // 3. Menghapus pengecekan nama produk dan langsung set token
-    const tokensToAdd = 100;
-
-    const usersRef = db.collection('users');
-    const snapshot = await usersRef.where('email', '==', customer_email).limit(1).get();
-
-    if (snapshot.empty) {
-      console.log(`Webhook Error: User not found with email: ${customer_email}`);
-      return res.status(200).send('OK: User not found, but webhook acknowledged.');
-    }
-
-    const userDoc = snapshot.docs[0];
-    await userDoc.ref.update({
-      tokens: admin.firestore.FieldValue.increment(tokensToAdd)
-    });
-
-    console.log(`Success: Added ${tokensToAdd} tokens to ${customer_email}`);
-    return res.status(200).send('Success: Tokens added.');
+    // Jika event bukan salah satu di atas, abaikan.
+    return res.status(200).send('OK: Event received but no action taken.');
 
   } catch (error) {
     console.error("Error processing Scalev webhook:", error);
