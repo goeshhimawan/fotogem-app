@@ -1,9 +1,7 @@
 // This is a Vercel Serverless Function using CommonJS syntax
-
 const crypto = require('crypto');
 const admin = require('firebase-admin');
 
-// ... (kode inisialisasi Firebase tetap sama) ...
 const privateKey = process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n');
 if (!admin.apps.length) {
   admin.initializeApp({
@@ -15,7 +13,9 @@ if (!admin.apps.length) {
   });
 }
 const db = admin.firestore();
+
 export const config = { api: { bodyParser: false } };
+
 const getRawBody = (req) => {
   return new Promise((resolve, reject) => {
     const chunks = [];
@@ -24,7 +24,6 @@ const getRawBody = (req) => {
     req.on('error', (err) => reject(err));
   });
 };
-// ... (kode inisialisasi Firebase tetap sama) ...
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
@@ -35,14 +34,12 @@ module.exports = async (req, res) => {
   const body = JSON.parse(rawBody.toString());
 
   try {
-    // ... (kode verifikasi signature tetap sama) ...
     const receivedSignature = req.headers['x-scalev-hmac-sha256'];
     const signingSecret = process.env.SCALEV_WEBHOOK_SECRET;
     if (!receivedSignature) { return res.status(401).send('Unauthorized: Signature missing.'); }
     const calculatedSignature = crypto.createHmac('sha256', signingSecret).update(rawBody).digest('base64');
     const areSignaturesEqual = crypto.timingSafeEqual(Buffer.from(receivedSignature, 'base64'), Buffer.from(calculatedSignature, 'base64'));
     if (!areSignaturesEqual) { return res.status(401).send('Unauthorized: Invalid signature.'); }
-    // ... (kode verifikasi signature tetap sama) ...
     
     const { event, data } = body;
 
@@ -51,30 +48,28 @@ module.exports = async (req, res) => {
       return res.status(200).send('OK: Test event received successfully.');
     }
 
-    // --- PERUBAHAN UTAMA ADA DI SINI ---
+    // --- PERUBAHAN FINAL ADA DI SINI ---
     const acceptedEvents = ['order.status_changed', 'order.payment_status_changed'];
 
-    // Cek apakah eventnya relevan DAN statusnya 'completed'
-    if (!acceptedEvents.includes(event) || data.status !== 'completed') {
-        console.log(`Ignoring event "${event}" with status "${data.status}".`);
+    // 1. Menggunakan 'data.payment_status' dan mengecek 'paid'
+    if (!acceptedEvents.includes(event) || data.payment_status !== 'paid') {
+        console.log(`Ignoring event "${event}" with payment_status "${data.payment_status}".`);
         return res.status(200).send('OK: Event not relevant.');
     }
 
-    const customer_email = data.customer ? data.customer.email : null;
-    const product_name = data.products && data.products.length > 0 ? data.products[0].name : null;
+    // 2. Mengambil email dari lokasi yang benar
+    const customer_email = data.payment_status_history && data.payment_status_history.length > 0 
+      ? data.payment_status_history[0].by.email 
+      : null;
 
-    if (!customer_email || !product_name) {
-      console.error("Webhook payload is missing customer email or product name.", data);
-      return res.status(400).send('Bad Request: Missing customer_email or product_name in the webhook data object.');
+    // Cek apakah email ditemukan
+    if (!customer_email) {
+      console.error("Could not find customer email in the webhook payload.", data);
+      return res.status(400).send('Bad Request: Customer email not found in payload.');
     }
 
-    let tokensToAdd = 0;
-    if (product_name === "Akses FotoGem") {
-      tokensToAdd = 100;
-    } else {
-      console.log(`Product "${product_name}" not recognized for token assignment.`);
-      return res.status(200).send('OK: Product not relevant for tokens.');
-    }
+    // 3. Menghapus pengecekan nama produk dan langsung set token
+    const tokensToAdd = 100;
 
     const usersRef = db.collection('users');
     const snapshot = await usersRef.where('email', '==', customer_email).limit(1).get();
