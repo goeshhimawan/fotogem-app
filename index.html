@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FotoGem – Studio Foto AI Profesional</title>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -32,30 +30,43 @@
 </head>
 <body class="bg-gray-50 text-gray-800">
 
-    <!-- Main Application Container -->
     <div id="app" class="relative min-h-screen flex flex-col">
 
-        <!-- Header -->
-        <header class="w-full p-4 sm:p-6 flex justify-between items-center">
+        <header class="w-full p-4 sm:p-6 flex justify-between items-center relative">
             <a href="#" id="logo-link" class="cursor-pointer">
                 <img src="https://ik.imagekit.io/goeshhimawan/FotoGem%20_%20AI%20Product%20Studio/FotoGem.webp?updatedAt=1759809442892" alt="Logo FotoGem" class="h-8 md:h-10 w-auto">
             </a>
-            <!-- User Authentication Section -->
+            
             <div id="auth-section">
                 <button id="login-btn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 transition">Masuk</button>
-                <div id="user-info" class="hidden items-center gap-4">
-                    <div class="text-right">
-                        <p id="user-email" class="text-sm font-medium text-gray-800"></p>
-                        <p class="text-xs text-gray-500">Sisa Token: <span id="token-count" class="font-bold">0</span></p>
-                    </div>
-                    <button id="logout-btn" class="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-200 rounded-lg shadow-sm hover:bg-red-50 transition">Keluar</button>
+                
+                <div id="user-menu-container" class="hidden">
+                    <button id="burger-btn" class="p-2 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div id="burger-menu" class="hidden absolute top-16 right-4 mt-2 w-64 bg-white rounded-lg shadow-xl z-20 transition-all duration-200 ease-out transform opacity-0 scale-95">
+                <div class="p-4 border-b border-gray-200">
+                    <p id="menu-user-email" class="text-sm font-medium text-gray-900 truncate"></p>
+                    <p class="text-xs text-gray-500">Sisa Token: <span id="menu-token-count" class="font-bold">0</span></p>
+                </div>
+                <div class="py-2">
+                    <a href="https://goeshhimawan.my.id/fotogem-akses" target="_blank" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        Beli Token
+                    </a>
+                    <button id="menu-logout-btn" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                        Keluar
+                    </button>
                 </div>
             </div>
         </header>
 
         <main class="flex-grow flex items-center justify-center p-4">
             
-            <!-- Step 1: Landing Page -->
             <div id="landing-page" class="page w-full max-w-4xl text-center">
                  <div class="space-y-6">
                     <h2 class="text-4xl md:text-5xl font-bold tracking-tight text-gray-900">Ubah foto biasa menjadi visual berkualitas studio dalam hitungan detik.</h2>
@@ -67,7 +78,6 @@
                 </div>
             </div>
             
-            <!-- Step 2: Upload Page -->
             <div id="upload-page" class="page hidden w-full max-w-3xl">
                 <div class="bg-white p-8 rounded-2xl shadow-lg w-full space-y-6 text-center">
                     <div>
@@ -98,7 +108,6 @@
                 </div>
             </div>
 
-            <!-- Step 3: Choose Style Page -->
             <div id="style-page" class="page hidden w-full max-w-5xl">
                  <div class="bg-white p-8 rounded-2xl shadow-lg w-full space-y-8">
                       <div>
@@ -148,7 +157,6 @@
                 </div>
             </div>
 
-            <!-- Step 4: Processing & Result Page -->
             <div id="result-page" class="page hidden w-full max-w-4xl">
                 <div id="processing-view" class="bg-white p-8 rounded-2xl shadow-lg w-full text-center space-y-6"><h2 class="text-2xl font-bold text-gray-900">Menciptakan foto produk studio Anda...</h2><p class="text-gray-500">Memproses foto Anda dengan FotoGem AI...</p><div class="w-full bg-gray-200 rounded-full h-4 relative overflow-hidden"><div class="absolute top-0 left-0 h-full bg-blue-500 animate-pulse" style="width: 100%;"></div></div><p class="text-sm text-gray-400">Proses ini mungkin memerlukan beberapa saat. Mohon jangan tutup jendela ini.</p></div>
                 <div id="result-view" class="hidden bg-white p-8 rounded-2xl shadow-lg w-full space-y-6"><h2 class="text-3xl font-bold text-gray-900 text-center">Foto Studio Anda Sudah Siap!</h2><div class="comparison-slider w-full max-w-2xl mx-auto aspect-square"><img src="" alt="Sebelum" class="before-image"><div class="after-image-container"><img src="" alt="Sesudah" class="after-image"></div><div class="handle-icon-wrapper" style="left: 50%;"><div class="handle-icon"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path></svg></div></div></div><div class="flex flex-col sm:flex-row gap-4 justify-center"><button id="download-btn" class="flex-1 bg-blue-500 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-blue-600 transition">Unduh Gambar</button><button id="regenerate-btn" class="flex-1 bg-gray-100 text-gray-800 font-semibold py-3 border border-gray-200 rounded-lg hover:bg-gray-200 transition">Buat Ulang (1 Token)</button><button id="try-another-style-btn" class="flex-1 bg-gray-100 text-gray-800 font-semibold py-3 border border-gray-200 rounded-lg hover:bg-gray-200 transition">Coba Gaya Lain</button><button id="upload-new-btn" class="flex-1 bg-gray-100 text-gray-800 font-semibold py-3 border border-gray-200 rounded-lg hover:bg-gray-200 transition">Unggah Produk Baru</button></div></div>
@@ -192,7 +200,7 @@
                     Ambil Foto dari Kamera
                 </button>
                 <button id="use-gallery-btn" class="w-full flex items-center justify-center gap-3 bg-gray-100 text-gray-800 font-semibold py-3 border border-gray-200 rounded-lg hover:bg-gray-200 transition">
-                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                     Pilih dari Galeri
                 </button>
                 <button id="cancel-upload-choice-btn" class="w-full text-gray-500 font-medium py-2 mt-2 hover:text-gray-800 transition">Batal</button>
@@ -209,7 +217,6 @@
         </div>
     </div>
 
-    <!-- Modals (Auth, No Tokens) -->
     <div id="auth-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
         <div class="bg-white rounded-2xl p-8 space-y-6 w-full max-w-md relative">
             <button id="close-auth-modal-btn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700">&times;</button>
@@ -239,7 +246,6 @@
         </div>
     </div>
 
-    <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -373,10 +379,12 @@
             const authModal = document.getElementById('auth-modal');
             const noTokensModal = document.getElementById('no-tokens-modal');
             const loginBtn = document.getElementById('login-btn');
-            const logoutBtn = document.getElementById('logout-btn');
-            const userInfoDiv = document.getElementById('user-info');
-            const userEmailP = document.getElementById('user-email');
-            const tokenCountSpan = document.getElementById('token-count');
+            const userMenuContainer = document.getElementById('user-menu-container'); 
+            const burgerBtn = document.getElementById('burger-btn'); 
+            const burgerMenu = document.getElementById('burger-menu'); 
+            const menuUserEmail = document.getElementById('menu-user-email'); 
+            const menuTokenCount = document.getElementById('menu-token-count'); 
+            const menuLogoutBtn = document.getElementById('menu-logout-btn'); 
             const authForm = document.getElementById('auth-form');
             const authEmailInput = document.getElementById('auth-email');
             const authPasswordInput = document.getElementById('auth-password');
@@ -436,9 +444,9 @@
                 if (user) {
                     currentUser = user;
                     loginBtn.classList.add('hidden');
-                    userInfoDiv.classList.remove('hidden');
-                    userInfoDiv.classList.add('flex');
-                    userEmailP.textContent = user.email;
+                    userMenuContainer.classList.remove('hidden'); 
+
+                    menuUserEmail.textContent = user.email;
 
                     const userDocRef = doc(db, "users", user.uid);
                     if (unsubscribeUserDoc) unsubscribeUserDoc();
@@ -447,7 +455,7 @@
                         if (doc.exists()) {
                             const data = doc.data();
                             userTokens = data.tokens;
-                            tokenCountSpan.textContent = userTokens;
+                            menuTokenCount.textContent = userTokens; 
                         } else {
                             console.log("User document not found, might be a new user.");
                         }
@@ -456,8 +464,7 @@
                     currentUser = null;
                     userTokens = 0;
                     loginBtn.classList.remove('hidden');
-                    userInfoDiv.classList.add('hidden');
-                    userInfoDiv.classList.remove('flex');
+                    userMenuContainer.classList.add('hidden'); 
                     if (unsubscribeUserDoc) unsubscribeUserDoc();
                     showPage('landing');
                 }
@@ -493,7 +500,11 @@
                 }
             });
 
-            logoutBtn.addEventListener('click', () => signOut(auth));
+            menuLogoutBtn.addEventListener('click', () => {
+                signOut(auth);
+                burgerMenu.classList.add('hidden', 'opacity-0', 'scale-95');
+            });
+
             loginBtn.addEventListener('click', showAuthModal);
             closeAuthModalBtn.addEventListener('click', hideAuthModal);
             authToggleLink.addEventListener('click', (e) => {
@@ -501,6 +512,34 @@
                 toggleAuthMode();
             });
             closeNoTokensModalBtn.addEventListener('click', hideNoTokensModal);
+
+            // --- Burger Menu Logic ---
+            const toggleBurgerMenu = () => {
+                const isHidden = burgerMenu.classList.contains('hidden');
+                if (isHidden) {
+                    burgerMenu.classList.remove('hidden');
+                    setTimeout(() => {
+                        burgerMenu.classList.remove('opacity-0', 'scale-95');
+                    }, 10); 
+                } else {
+                    burgerMenu.classList.add('opacity-0', 'scale-95');
+                    setTimeout(() => {
+                        burgerMenu.classList.add('hidden');
+                    }, 200); 
+                }
+            };
+
+            burgerBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); 
+                toggleBurgerMenu();
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!burgerMenu.classList.contains('hidden') && !burgerMenu.contains(e.target) && !burgerBtn.contains(e.target)) {
+                    toggleBurgerMenu();
+                }
+            });
+
 
             // --- Event Listeners ---
             logoLink.addEventListener('click', (e) => { e.preventDefault(); showPage('landing'); });
@@ -899,5 +938,3 @@
     </script>
 </body>
 </html>
-
-
