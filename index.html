@@ -248,7 +248,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, getIdToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, onSnapshot, updateDoc, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Your web app's Firebase configuration will be set by Vercel Environment Variables
@@ -270,27 +270,12 @@
             // --- App State & Constants ---
             let uploadedFiles = [];
             let detectedNiche = null;
-            //let cameraStream = null;
-            //let currentFacingMode = 'environment';
             let currentUser = null;
             let userTokens = 0;
             let unsubscribeUserDoc = null; // To detach Firestore listener on logout
             let isLoginMode = true;
 
-            // ULTIMATE PROMPT v2: Added even more technical terms for rendering and camera simulation
-            const ULTIMATE_SKIN_AND_PHOTO_PROMPT = "Create a hyperrealistic professional photograph. Render natural human skin with extreme fidelity. Every micro-detail is crucial: visible pores, fine micro-wrinkles, subtle blemishes, and barely perceptible vellus hair (peach fuzz) must be present. Preserve all natural micro-textures and skin grain, including subtle shadows in skin creases. The skin's coloration must be authentic, showing natural variations and slight, realistic color unevenness. Master the physics of light on skin: highlight its natural diffusion and translucency (subsurface scattering), and render the natural gloss from skin oil. CRUCIAL: Absolutely no airbrushing, smoothing, or artificial blurring. The result must be free of any plastic, doll-like, or CG look. The image should emulate a high-end camera capture: soft photographic grain, a true optical depth of field, balanced exposure tone-mapping, cinematic natural lighting, physically accurate shadow softness, and a filmic color response curve. The final output must be an unretouched, authentic photograph comparable to a high-fashion beauty campaign, use ultra-high-frequency texture synthesis, physically based rendering of skin micro-fibers, and sub-millimeter displacement mapping to reproduce true epidermal irregularities under directional lighting.";
-            const UNIVERSAL_TEXTURE_REALISM = `
-                Render all materials with physically-based accuracy.
-                For fabrics: resolve visible weave patterns, soft wrinkles, and micro-fiber fuzz under diffused light.
-                For glass or transparent materials: simulate refraction, edge dispersion, smudges, and balanced reflection.
-                For liquids: show correct meniscus curve, droplet specularity, and thin film reflection.
-                For metal: display micro-scratches, brushed texture, and soft highlight falloff.
-                For wood or stone: preserve grain detail, micro roughness, and natural imperfections.
-                For plastic: reproduce subtle surface gloss, edge reflection, and texture fidelity.
-                For hair or fur: maintain directional strand detail with correct light scattering.
-                Ensure realistic subsurface scattering, accurate specular roughness, and micro shadowing.
-                Use physically based rendering (PBR) with high-frequency displacement mapping for all textures.`;
-            const CINEMATIC_OPTICS_REALISM = `Simulate true optical camera physics: depth-of-field, chromatic aberration, realistic bokeh highlights, lens diffraction at small apertures, and accurate color bleeding between materials. Lighting must behave like a real studio with inverse-square law intensity falloff and soft diffusion shadows.`;
+            // REMOVED: All secret prompts are now on the server.
             
             const NICHE_CATEGORIES = [
                 "Beauty & Personal Care", "Fashion & Apparel", "Home & Living",
@@ -313,28 +298,6 @@
                 "Health & Wellness": "Zen & Wellness",
                 "Gift & Stationery": "Flatlay"
             };
-
-            const STYLE_PROMPT_MAP = {
-                "Classic Studio": "clean studio light, pure white background, soft shadow, professional product photography, high detail, minimal aesthetic, ultra-detailed textures, controlled reflection, realistic lens focus, 85mm studio lens look, photorealistic material accuracy",
-                "Natural Organic": "natural daylight, soft warm tone, wooden surface, linen texture, organic mood, nature inspired, fresh clean style, macro-level fabric texture visibility, realistic daylight falloff, bokeh depth, fine surface imperfections",
-                "Luxury Premium": "luxury lighting, black and gold palette, glossy reflection, marble background, elegant cinematic product shot, soft specular highlights, cinematic contrast ratio 1:3, glass/marble reflections rendered with physical accuracy, ultra-clean DOF",
-                "Modern Minimal": "modern minimalist studio photography, focusing on the product's form with balanced composition and negative space. Use soft, diffused lighting with subtle shadows. The color palette should be tone-on-tone harmony. No distracting decorations, real photographic depth, true-to-life textures, no CG look, natural imperfections retained",
-                "Lifestyle": "in-context lifestyle scene, natural environment, human element optional, real-life usage setup, cozy lighting, environmental lighting matching, soft focus background, depth separation between subject and product, cinematic LUT",
-                "Flatlay": "flatlay top view, creative arrangement, shadowless soft light, visual storytelling composition, minimalist props, ultra-sharp lens detail, natural daylight shadow gradient, 50mm macro lens look, crisp textures",
-                "Tech Futuristic": "futuristic gradient light, metallic reflection, cyber aesthetic, cool blue tone, modern tech background, photo-based realism, metal micro-scratch detail, volumetric lighting realism, precise exposure balance",
-                "Interior": "interior lighting, cozy home setup, wooden furniture, ambient warm tone, natural shadows, high-resolution detail, soft directional window light, realistic reflections, cinematic exposure tone-mapping",
-                "Zen & Wellness": "calm zen mood, soft diffused lighting, stone and towel texture, spa environment, peaceful color palette, ultra-fine texture of stone/towel, realistic shadow diffusion, serene daylight realism",
-                "Hero Campaign": "cinematic lighting, dramatic spotlight, product hero center, depth of field, studio-grade composition, studio smoke haze realism, volumetric light beam accuracy, ultra-high contrast dynamic range"
-            };
-
-            const MODEL_PRESET_PROMPT_MAP = {
-                "Runway Editorial": `full body framing, confident editorial stance, high-contrast soft keylight, model with a strong, assertive expression. ${ULTIMATE_SKIN_AND_PHOTO_PROMPT} 4K fashion photography realism.`,
-                "Commercial Lifestyle": `natural casual pose, like a commercial ad, soft natural daylight, model with a friendly, authentic expression, soft daylight tone. ${ULTIMATE_SKIN_AND_PHOTO_PROMPT} Natural dynamic skin lighting.`,
-                "Studio Campaign": `formal studio campaign style, professional balanced lighting (key, fill, rim), neutral backdrop, confident and polished model pose. ${ULTIMATE_SKIN_AND_PHOTO_PROMPT} Balanced color grading.`,
-                "Dynamic Fashion Shot": `dynamic motion pose, as if walking or turning lightly, with subtle motion blur, cinematic keylight, and a candid expression. ${ULTIMATE_SKIN_AND_PHOTO_PROMPT} Realistic motion captured blur.`,
-                "Creative Hero Model": `creative hero shot focusing on the product, with the full-body model in the center of the frame, high-contrast cinematic lighting. ${ULTIMATE_SKIN_AND_PHOTO_PROMPT} Studio smoke, cinematic LUT color accuracy.`
-            };
-
 
             // --- Page Elements ---
             const pages = {
@@ -362,11 +325,6 @@
             const useCameraBtn = document.getElementById('use-camera-btn');
             const useGalleryBtn = document.getElementById('use-gallery-btn');
             const cancelUploadChoiceBtn = document.getElementById('cancel-upload-choice-btn');
-            //const cameraView = document.getElementById('camera-view');
-            //const cameraStreamElem = document.getElementById('camera-stream');
-            //const cameraCanvas = document.getElementById('camera-canvas');
-            //const captureBtn = document.getElementById('capture-btn');
-            //const cancelCameraBtn = document.getElementById('cancel-camera-btn');
             const styleCards = document.querySelectorAll('.style-card');
             const aiRecommendToggle = document.getElementById('ai-recommend-toggle');
             const onModelToggle = document.getElementById('on-model-toggle');
@@ -594,74 +552,32 @@
             dropArea.addEventListener('dragleave', () => dropArea.classList.remove('drag-over'));
             dropArea.addEventListener('drop', (e) => { e.preventDefault(); dropArea.classList.remove('drag-over'); handleFiles(e.dataTransfer.files); });
             
-            // Tombol untuk membuka kamera HP
             useCameraBtn.addEventListener('click', () => {
-                // Atur atribut untuk langsung buka kamera belakang
-                fileInput.removeAttribute('multiple'); // Kamera hanya bisa ambil 1 foto
+                fileInput.removeAttribute('multiple');
                 fileInput.setAttribute('capture', 'environment');
                 fileInput.click();
                 hideUploadChoiceModal();
             });
             
-            // Tombol untuk membuka galeri
             useGalleryBtn.addEventListener('click', () => {
-                // Atur atribut untuk memilih dari galeri (bisa multiple)
                 fileInput.setAttribute('multiple', '');
                 fileInput.removeAttribute('capture');
                 fileInput.click();
                 hideUploadChoiceModal();
             });
 
-            // Listener utama untuk menangani file yang dipilih (dari kamera atau galeri)
             fileInput.addEventListener('change', (e) => {
                 if (e.target.files.length > 0) {
                     handleFiles(e.target.files);
                 }
-                // Reset value agar bisa upload file yang sama lagi
                 e.target.value = ''; 
             });
             
             cancelUploadChoiceBtn.addEventListener('click', hideUploadChoiceModal);
-            //galleryInput.addEventListener('change', (e) => { hideUploadChoiceModal(); if (e.target.files.length > 0) handleFiles(e.target.files); e.target.value = ''; });
 
-            // --- Camera Logic ---
-            // Versi BARU yang sudah diperbaiki
-            const startCamera = async () => {
-                if ('mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices) {
-                    try {
-                        const constraints = { video: { facingMode: "environment" } };
-                        cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
-            
-                        // --- BLOK KODE BARU UNTUK DETEKSI ---
-                        if (cameraStream.getVideoTracks().length > 0) {
-                            const settings = cameraStream.getVideoTracks()[0].getSettings();
-                            currentFacingMode = settings.facingMode;
-                            console.log('Camera facing mode:', currentFacingMode); // Untuk debugging
-                        }
-                        // --- AKHIR BLOK KODE BARU ---
-            
-                        cameraStreamElem.srcObject = cameraStream;
-                        cameraStreamElem.onloadedmetadata = () => {
-                            cameraStreamElem.play();
-                            cameraView.classList.remove('hidden');
-                        };
-                    } catch (err) {
-                        console.error("Camera access error:", err);
-                        showToast("Tidak bisa mengakses kamera. Pastikan Anda telah memberikan izin.", false);
-                    }
-                } else {
-                    showToast("Browser Anda tidak mendukung akses kamera.", false);
-                }
-            };
-            const stopCamera = () => {
-                if (cameraStream) {
-                    cameraStream.getTracks().forEach(track => track.stop());
-                }
-                cameraView.classList.add('hidden');
-            };
-            
             // --- File Handling & Classification ---
             const fileToBase64 = (file) => new Promise((resolve, reject) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => resolve(reader.result.split(',')[1]); reader.onerror = error => reject(error); });
+            
             const classifyImage = async (fileData) => {
                 nicheRecommendationContent.innerHTML = `<div class="spinner"></div> <p>Mendeteksi niche produk...</p>`;
                 nicheRecommendationBox.classList.remove('hidden');
@@ -671,7 +587,7 @@
                     if (!fileData.base64) {
                         fileData.base64 = await fileToBase64(fileData.file);
                     }
-                    const apiKey = "%VITE_GEMINI_API_KEY%"; // Use Gemini key for classification
+                    const apiKey = "%VITE_GEMINI_API_KEY%";
                     
                     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                     const prompt = `Analisis produk dalam gambar ini dan klasifikasikan ke dalam SATU dari kategori berikut: ${NICHE_CATEGORIES.join(", ")}. Balas hanya dengan nama kategori, tanpa teks atau tanda baca tambahan.`;
@@ -798,7 +714,9 @@
             document.getElementById('adv-bg-color-picker').addEventListener('input', (e) => document.getElementById('adv-bg-color-hex').value = e.target.value.toUpperCase());
             document.getElementById('adv-bg-color-hex').addEventListener('change', (e) => document.getElementById('adv-bg-color-picker').value = e.target.value);
 
-            // --- Generation Logic (Tokenized) ---
+
+            // --- NEW: Generation Logic (Client-Side) ---
+            // This function now only collects user choices and sends them to our secure API.
             async function startProcessing() {
                 if (!currentUser) { showToast("Anda harus login untuk membuat gambar.", false); showAuthModal(); return; }
                 if (userTokens <= 0) { showNoTokensModal(); return; }
@@ -808,133 +726,87 @@
                 resultView.classList.add('hidden');
                 processingView.classList.remove('hidden');
 
-                const userDocRef = doc(db, "users", currentUser.uid);
                 try {
-                    await updateDoc(userDocRef, { tokens: increment(-1) });
-                } catch (e) {
-                    console.error("Token update failed:", e);
-                    showToast("Gagal memperbarui token. Coba lagi.", false);
-                    showPage('style');
-                    return;
-                }
+                    // 1. Get the Firebase Auth token for the current user.
+                    const idToken = await getIdToken(currentUser);
 
-                try {
+                    // 2. Prepare image data and user options.
                     const imageParts = await Promise.all(uploadedFiles.map(async (f) => {
                         if (!f.base64) f.base64 = await fileToBase64(f.file);
                         return { inlineData: { mimeType: f.file.type, data: f.base64 } };
                     }));
+                    
                     beforeImageElem.src = uploadedFiles[0].objectURL;
-                    const finalPrompt = buildFinalPrompt();
 
-                    const apiKey = "%VITE_GEMINI_API_KEY%";
-
-                    console.log("Final Prompt:", finalPrompt); // For debugging the final prompt
-
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${apiKey}`;
-                    const payload = {
-                        contents: [{ parts: [{ text: finalPrompt }, ...imageParts] }],
-                        generationConfig: { responseModalities: ['IMAGE'] },
+                    const selectedStyleCard = document.querySelector('.style-card.selected');
+                    const options = {
+                        style: selectedStyleCard ? selectedStyleCard.dataset.style : 'Classic Studio',
+                        useModel: onModelToggle.checked,
+                        modelOptions: {
+                            preset: document.getElementById('model-preset').value,
+                            gender: document.getElementById('model-gender').value,
+                            age: document.getElementById('model-age').value,
+                            ethnicity: document.getElementById('model-ethnicity').value,
+                            skinTone: document.getElementById('model-skin-tone').value,
+                            outfit: document.getElementById('model-outfit').value,
+                            pose: document.getElementById('model-pose').value,
+                            expression: document.getElementById('model-expression').value,
+                            focus: document.getElementById('model-focus').value,
+                            makeup: document.getElementById('model-makeup').value,
+                        },
+                        useAdvanced: advancedOptionsToggle.checked,
+                        advancedOptions: {
+                            lightingMood: document.getElementById('adv-lighting-mood').value,
+                            backgroundVariant: document.getElementById('adv-background-variant').value,
+                            bgColor: document.getElementById('adv-bg-color-hex').value,
+                            shotType: document.getElementById('adv-shot-type').value,
+                            shadowStyle: document.getElementById('adv-shadow-style').value,
+                            propPresence: document.getElementById('adv-prop-presence').value,
+                            customPrompt: document.getElementById('adv-custom-prompt').value
+                        }
                     };
                     
-                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    if (!response.ok) { 
-                        const err = await response.json(); 
-                        throw new Error(err.error?.message || "Terjadi kesalahan API yang tidak diketahui."); 
-                    }
-                    const result = await response.json();
+                    // 3. Call our own secure API endpoint instead of Gemini directly.
+                    const response = await fetch('/api/generate-image', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${idToken}`
+                        },
+                        body: JSON.stringify({ imageParts, options, detectedNiche })
+                    });
                     
-                    if (result.promptFeedback && result.promptFeedback.blockReason) {
-                        throw new Error(`Permintaan diblokir karena: ${result.promptFeedback.blockReason}. Coba gambar atau prompt yang berbeda.`);
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        // Special handling for "Insufficient tokens" error
+                        if (response.status === 402) {
+                            showNoTokensModal();
+                            throw new Error("Token Anda habis."); // This stops execution and goes to catch block
+                        }
+                        throw new Error(errorData.error || `Error ${response.status}`);
                     }
 
-                    const base64Data = result.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
-                    if (!base64Data) {
+                    const result = await response.json();
+                    
+                    if (!result.base64Data) {
                          throw new Error("API tidak memberikan data gambar yang valid.");
                     }
 
-                    afterImageElem.src = `data:image/png;base64,${base64Data}`;
+                    // 4. Display the result.
+                    afterImageElem.src = `data:image/png;base64,${result.base64Data}`;
                     processingView.classList.add('hidden');
                     resultView.classList.remove('hidden');
+                    
                 } catch (error) {
-                    console.error("API Call Failed:", error);
-                    showToast(`Terjadi Kesalahan: ${error.message}`, false);
-                    await updateDoc(userDocRef, { tokens: increment(1) }); // Refund token
-                    showToast(`Token dikembalikan karena proses gagal.`, true);
-                    showPage('style');
+                    console.error("Processing Failed:", error);
+                    // No need to refund token here, the server handles it automatically on failure.
+                    // We only show error messages.
+                    if (error.message !== "Token Anda habis.") {
+                        showToast(`Terjadi Kesalahan: ${error.message}`, false);
+                    }
+                    showPage('style'); // Go back to style page on error
                 }
             }
-            
-            // UPDATED: This function now builds the most advanced prompt
-                const buildFinalPrompt = () => {
-                const selectedStyleCard = document.querySelector('.style-card.selected');
-                const style = selectedStyleCard ? selectedStyleCard.dataset.style : 'Classic Studio';
-                let nicheContext = detectedNiche ? `This product is in the '${detectedNiche}' category. ` : '';
-                
-                // MODIFIKASI 1: Ganti globalSuffix dengan prompt optik baru Anda
-                const globalSuffix = CINEMATIC_OPTICS_REALISM;
-            
-                // MODIFIKASI 2: Suntikkan prompt tekstur universal ke dalam basePrompt
-                let basePrompt = `Generate one high-quality studio photo based on multiple reference images of the same product. Use all uploaded images collectively to preserve the true shape, color, texture, and proportions. Combine front, side, and back views coherently into a single consistent perspective. Do not invent new elements. Keep realism intact. CRUCIAL INSTRUCTION: Do NOT change the product from the original image in any way. Its color, shape, size, texture, and any logos or text must be perfectly preserved. Only change the background, lighting, and environment around the product. The final image must have a strict 1:1 square aspect ratio. ${UNIVERSAL_TEXTURE_REALISM} ${nicheContext}`;
-                
-                let stylePrompt = "";
-                let modelPrompt = "";
-                let advancedPrompt = "";
-            
-                if (onModelToggle.checked) {
-                    // ... (logika model tetap sama)
-                    const modelPreset = document.getElementById('model-preset').value;
-                    modelPrompt += " The photo must include a human model. ";
-                    const gender = document.getElementById('model-gender').value;
-                    if (gender !== 'Auto Detect') modelPrompt += `Gender: ${gender}. `;
-                    const age = document.getElementById('model-age').value;
-                    if (age !== 'Random') modelPrompt += `Age: ${age}. `;
-                    const ethnicity = document.getElementById('model-ethnicity').value;
-                    if (ethnicity !== 'Random') modelPrompt += `Ethnicity: ${ethnicity}. `;
-                    const skinTone = document.getElementById('model-skin-tone').value;
-                    if (skinTone !== 'Random') modelPrompt += `Skin Tone: ${skinTone}. `;
-                    const outfit = document.getElementById('model-outfit').value;
-                    if (outfit !== 'Random') modelPrompt += `Outfit: ${outfit}. `;
-            
-                    if (modelPreset !== 'Manual Control') {
-                        modelPrompt += MODEL_PRESET_PROMPT_MAP[modelPreset] || '';
-                    } else {
-                        modelPrompt += ` ${ULTIMATE_SKIN_AND_PHOTO_PROMPT} `;
-                        const pose = document.getElementById('model-pose').value;
-                        if (pose !== 'Random') modelPrompt += `Pose: ${pose}. `;
-                        const expression = document.getElementById('model-expression').value;
-                        if (expression !== 'Random') modelPrompt += `Expression: ${expression}. `;
-                        modelPrompt += `Camera Focus: ${document.getElementById('model-focus').value}. `;
-                        modelPrompt += `Makeup: ${document.getElementById('model-makeup').value}. `;
-                    }
-                }
-            
-                if (advancedOptionsToggle.checked) {
-                    // ... (logika advanced options tetap sama)
-                    const lightingMood = document.getElementById('adv-lighting-mood').value;
-                    const backgroundVariant = document.getElementById('adv-background-variant').value;
-                    const bgColor = document.getElementById('adv-bg-color-hex').value;
-                    const shotType = document.getElementById('adv-shot-type').value;
-                    const shadowStyle = document.getElementById('adv-shadow-style').value;
-                    const propPresence = document.getElementById('adv-prop-presence').value;
-                    const customPrompt = document.getElementById('adv-custom-prompt').value;
-                    advancedPrompt = ` The lighting mood is '${lightingMood}'.`;
-                    advancedPrompt += ` The background is a '${backgroundVariant}' type.`;
-                    if (backgroundVariant === 'Solid' || backgroundVariant === 'Gradient') {
-                        advancedPrompt += ` The primary color for the background should be around ${bgColor}.`;
-                    }
-                    advancedPrompt += ` The camera composition is a '${shotType}'.`;
-                    advancedPrompt += ` Use a '${shadowStyle}'.`;
-                    advancedPrompt += ` Prop presence level is '${propPresence}'.`;
-                    if (customPrompt.trim() !== '') {
-                        advancedPrompt += ` Additional user instructions: ${customPrompt}.`;
-                    }
-                } else {
-                    if (!onModelToggle.checked) {
-                        stylePrompt = STYLE_PROMPT_MAP[style] || `The desired style is: "${style}".`;
-                    }
-                }
-                return `${basePrompt} ${modelPrompt} ${stylePrompt} ${advancedPrompt} ${globalSuffix}`;
-            };
             
             // --- Slider & Help Logic ---
             let isDragging = false;
@@ -978,7 +850,3 @@
     </script>
 </body>
 </html>
-
-
-
-
