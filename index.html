@@ -270,8 +270,8 @@
             // --- App State & Constants ---
             let uploadedFiles = [];
             let detectedNiche = null;
-            let cameraStream = null;
-            let currentFacingMode = 'environment';
+            //let cameraStream = null;
+            //let currentFacingMode = 'environment';
             let currentUser = null;
             let userTokens = 0;
             let unsubscribeUserDoc = null; // To detach Firestore listener on logout
@@ -362,11 +362,11 @@
             const useCameraBtn = document.getElementById('use-camera-btn');
             const useGalleryBtn = document.getElementById('use-gallery-btn');
             const cancelUploadChoiceBtn = document.getElementById('cancel-upload-choice-btn');
-            const cameraView = document.getElementById('camera-view');
-            const cameraStreamElem = document.getElementById('camera-stream');
-            const cameraCanvas = document.getElementById('camera-canvas');
-            const captureBtn = document.getElementById('capture-btn');
-            const cancelCameraBtn = document.getElementById('cancel-camera-btn');
+            //const cameraView = document.getElementById('camera-view');
+            //const cameraStreamElem = document.getElementById('camera-stream');
+            //const cameraCanvas = document.getElementById('camera-canvas');
+            //const captureBtn = document.getElementById('capture-btn');
+            //const cancelCameraBtn = document.getElementById('cancel-camera-btn');
             const styleCards = document.querySelectorAll('.style-card');
             const aiRecommendToggle = document.getElementById('ai-recommend-toggle');
             const onModelToggle = document.getElementById('on-model-toggle');
@@ -593,8 +593,34 @@
             dropArea.addEventListener('dragover', (e) => { e.preventDefault(); dropArea.classList.add('drag-over'); });
             dropArea.addEventListener('dragleave', () => dropArea.classList.remove('drag-over'));
             dropArea.addEventListener('drop', (e) => { e.preventDefault(); dropArea.classList.remove('drag-over'); handleFiles(e.dataTransfer.files); });
-            useCameraBtn.addEventListener('click', () => { hideUploadChoiceModal(); startCamera(); });
-            useGalleryBtn.addEventListener('click', () => galleryInput.click());
+            
+            // Tombol untuk membuka kamera HP
+            useCameraBtn.addEventListener('click', () => {
+                // Atur atribut untuk langsung buka kamera belakang
+                fileInput.removeAttribute('multiple'); // Kamera hanya bisa ambil 1 foto
+                fileInput.setAttribute('capture', 'environment');
+                fileInput.click();
+                hideUploadChoiceModal();
+            });
+            
+            // Tombol untuk membuka galeri
+            useGalleryBtn.addEventListener('click', () => {
+                // Atur atribut untuk memilih dari galeri (bisa multiple)
+                fileInput.setAttribute('multiple', '');
+                fileInput.removeAttribute('capture');
+                fileInput.click();
+                hideUploadChoiceModal();
+            });
+
+            // Listener utama untuk menangani file yang dipilih (dari kamera atau galeri)
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFiles(e.target.files);
+                }
+                // Reset value agar bisa upload file yang sama lagi
+                e.target.value = ''; 
+            });
+            
             cancelUploadChoiceBtn.addEventListener('click', hideUploadChoiceModal);
             galleryInput.addEventListener('change', (e) => { hideUploadChoiceModal(); if (e.target.files.length > 0) handleFiles(e.target.files); e.target.value = ''; });
 
@@ -633,28 +659,6 @@
                 }
                 cameraView.classList.add('hidden');
             };
-            // Versi BARU yang sudah diperbaiki
-            captureBtn.addEventListener('click', () => {
-                const context = cameraCanvas.getContext('2d');
-                cameraCanvas.width = cameraStreamElem.videoWidth;
-                cameraCanvas.height = cameraStreamElem.videoHeight;
-            
-                // Hanya lakukan flip jika ini kamera depan (selfie)
-                if (currentFacingMode === 'user') {
-                    context.translate(cameraCanvas.width, 0);
-                    context.scale(-1, 1);
-                }
-            
-                // Gambar image ke canvas (kode ini berjalan untuk kedua kamera)
-                context.drawImage(cameraStreamElem, 0, 0, cameraCanvas.width, cameraCanvas.height);
-                
-                cameraCanvas.toBlob(blob => {
-                    const file = new File([blob], `capture-${Date.now()}.png`, { type: 'image/png' });
-                    handleFiles([file]);
-                }, 'image/png');
-                stopCamera();
-            });
-            cancelCameraBtn.addEventListener('click', stopCamera);
             
             // --- File Handling & Classification ---
             const fileToBase64 = (file) => new Promise((resolve, reject) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => resolve(reader.result.split(',')[1]); reader.onerror = error => reject(error); });
@@ -974,5 +978,6 @@
     </script>
 </body>
 </html>
+
 
 
