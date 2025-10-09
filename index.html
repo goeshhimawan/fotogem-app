@@ -466,6 +466,10 @@
                     authErrorDiv.textContent = error.message;
                     authErrorDiv.classList.remove('hidden');
                 } finally {
+                    // Hidupkan kembali tombol setelah proses selesai (baik berhasil maupun gagal)
+                    generateBtn.disabled = false;
+                    regenerateBtn.disabled = false;
+                    
                     authSubmitBtn.disabled = false;
                     authSubmitBtn.textContent = isLoginMode ? 'Masuk' : 'Daftar';
                 }
@@ -722,6 +726,10 @@
                 if (userTokens <= 0) { showNoTokensModal(); return; }
                 if (uploadedFiles.length === 0) { showToast("Silakan unggah gambar terlebih dahulu.", false); showPage('upload'); return; }
 
+                //Langsung matikan tombol untuk mencegah double-click
+                generateBtn.disabled = true;
+                regenerateBtn.disabled = true;
+
                 showPage('result');
                 resultView.classList.add('hidden');
                 processingView.classList.remove('hidden');
@@ -850,4 +858,5 @@
     </script>
 </body>
 </html>
+
 
