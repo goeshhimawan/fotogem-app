@@ -722,22 +722,45 @@
             // --- NEW: Generation Logic (Client-Side) ---
             // This function now only collects user choices and sends them to our secure API.
             async function startProcessing() {
-                if (!currentUser) { showToast("Anda harus login untuk membuat gambar.", false); showAuthModal(); return; }
-                if (userTokens <= 0) { showNoTokensModal(); return; }
-                if (uploadedFiles.length === 0) { showToast("Silakan unggah gambar terlebih dahulu.", false); showPage('upload'); return; }
-
-                //Langsung matikan tombol untuk mencegah double-click
-                generateBtn.disabled = true;
-                regenerateBtn.disabled = true;
-
-                showPage('result');
-                resultView.classList.add('hidden');
-                processingView.classList.remove('hidden');
-
+                // ==================================================================
+                // BAGIAN 1: LAKUKAN SEMUA PENGECEKAN AWAL DI SINI
+                // ==================================================================
+                // Jika salah satu dari kondisi ini terpenuhi, fungsi akan berhenti 
+                // SEBELUM tombol dinonaktifkan, sehingga notifikasi bisa muncul dengan benar.
+            
+                if (!currentUser) { 
+                    showToast("Anda harus login untuk membuat gambar.", false); 
+                    showAuthModal(); 
+                    return; 
+                }
+                if (userTokens <= 0) { 
+                    showNoTokensModal(); 
+                    return; 
+                }
+                if (uploadedFiles.length === 0) { 
+                    showToast("Silakan unggah gambar terlebih dahulu.", false); 
+                    showPage('upload'); 
+                    return; 
+                }
+            
+                // ==================================================================
+                // BAGIAN 2: JIKA SEMUA PENGECEKAN LOLOS, BARU PROSES GAMBAR
+                // ==================================================================
+                // Tombol akan dinonaktifkan di dalam 'try' dan dijamin akan aktif kembali
+                // di dalam 'finally', apa pun yang terjadi.
+            
                 try {
+                    // Langsung matikan tombol untuk mencegah double-click
+                    generateBtn.disabled = true;
+                    regenerateBtn.disabled = true;
+            
+                    showPage('result');
+                    resultView.classList.add('hidden');
+                    processingView.classList.remove('hidden');
+            
                     // 1. Get the Firebase Auth token for the current user.
                     const idToken = await getIdToken(currentUser);
-
+            
                     // 2. Prepare image data and user options.
                     const imageParts = await Promise.all(uploadedFiles.map(async (f) => {
                         if (!f.base64) f.base64 = await fileToBase64(f.file);
@@ -745,7 +768,7 @@
                     }));
                     
                     beforeImageElem.src = uploadedFiles[0].objectURL;
-
+            
                     const selectedStyleCard = document.querySelector('.style-card.selected');
                     const options = {
                         style: selectedStyleCard ? selectedStyleCard.dataset.style : 'Classic Studio',
@@ -774,7 +797,7 @@
                         }
                     };
                     
-                    // 3. Call our own secure API endpoint instead of Gemini directly.
+                    // 3. Call our own secure API endpoint.
                     const response = await fetch('/api/generate-image', {
                         method: 'POST',
                         headers: {
@@ -786,20 +809,19 @@
                     
                     if (!response.ok) {
                         const errorData = await response.json();
-                        // Special handling for "Insufficient tokens" error
                         if (response.status === 402) {
                             showNoTokensModal();
-                            throw new Error("Token Anda habis."); // This stops execution and goes to catch block
+                            throw new Error("Token Anda habis.");
                         }
                         throw new Error(errorData.error || `Error ${response.status}`);
                     }
-
+            
                     const result = await response.json();
                     
                     if (!result.base64Data) {
                          throw new Error("API tidak memberikan data gambar yang valid.");
                     }
-
+            
                     // 4. Display the result.
                     afterImageElem.src = `data:image/png;base64,${result.base64Data}`;
                     processingView.classList.add('hidden');
@@ -807,12 +829,14 @@
                     
                 } catch (error) {
                     console.error("Processing Failed:", error);
-                    // No need to refund token here, the server handles it automatically on failure.
-                    // We only show error messages.
                     if (error.message !== "Token Anda habis.") {
                         showToast(`Terjadi Kesalahan: ${error.message}`, false);
                     }
                     showPage('style'); // Go back to style page on error
+                } finally {
+                    // Hidupkan kembali tombol setelah proses selesai (baik berhasil maupun gagal)
+                    generateBtn.disabled = false;
+                    regenerateBtn.disabled = false;
                 }
             }
             
@@ -858,5 +882,6 @@
     </script>
 </body>
 </html>
+
 
 
