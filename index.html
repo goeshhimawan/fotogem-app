@@ -271,6 +271,7 @@
             let uploadedFiles = [];
             let detectedNiche = null;
             let cameraStream = null;
+            let currentFacingMode = 'environment';
             let currentUser = null;
             let userTokens = 0;
             let unsubscribeUserDoc = null; // To detach Firestore listener on logout
@@ -598,11 +599,21 @@
             galleryInput.addEventListener('change', (e) => { hideUploadChoiceModal(); if (e.target.files.length > 0) handleFiles(e.target.files); e.target.value = ''; });
 
             // --- Camera Logic ---
+            // Versi BARU yang sudah diperbaiki
             const startCamera = async () => {
                 if ('mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices) {
                     try {
                         const constraints = { video: { facingMode: "environment" } };
                         cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+            
+                        // --- BLOK KODE BARU UNTUK DETEKSI ---
+                        if (cameraStream.getVideoTracks().length > 0) {
+                            const settings = cameraStream.getVideoTracks()[0].getSettings();
+                            currentFacingMode = settings.facingMode;
+                            console.log('Camera facing mode:', currentFacingMode); // Untuk debugging
+                        }
+                        // --- AKHIR BLOK KODE BARU ---
+            
                         cameraStreamElem.srcObject = cameraStream;
                         cameraStreamElem.onloadedmetadata = () => {
                             cameraStreamElem.play();
@@ -622,13 +633,21 @@
                 }
                 cameraView.classList.add('hidden');
             };
+            // Versi BARU yang sudah diperbaiki
             captureBtn.addEventListener('click', () => {
                 const context = cameraCanvas.getContext('2d');
                 cameraCanvas.width = cameraStreamElem.videoWidth;
                 cameraCanvas.height = cameraStreamElem.videoHeight;
-                context.translate(cameraCanvas.width, 0);
-                context.scale(-1, 1);
+            
+                // Hanya lakukan flip jika ini kamera depan (selfie)
+                if (currentFacingMode === 'user') {
+                    context.translate(cameraCanvas.width, 0);
+                    context.scale(-1, 1);
+                }
+            
+                // Gambar image ke canvas (kode ini berjalan untuk kedua kamera)
                 context.drawImage(cameraStreamElem, 0, 0, cameraCanvas.width, cameraCanvas.height);
+                
                 cameraCanvas.toBlob(blob => {
                     const file = new File([blob], `capture-${Date.now()}.png`, { type: 'image/png' });
                     handleFiles([file]);
@@ -955,4 +974,5 @@
     </script>
 </body>
 </html>
+
 
