@@ -111,6 +111,8 @@ module.exports = async (req, res) => {
             error: 'Method Not Allowed'
         });
     }
+  
+    let uid; // Definisikan uid di luar try-catch untuk bisa diakses di blok catch
 
     try {
         // 1. Authenticate the user
@@ -123,19 +125,20 @@ module.exports = async (req, res) => {
         const decodedToken = await auth.verifyIdToken(idToken);
         const uid = decodedToken.uid;
 
-        // 2. Check user's token balance
-        const userDocRef = db.collection('users').doc(uid);
-        const userDoc = await userDocRef.get();
+        // 2 & 3. Check balance and deduct token using a Transaction
+        await db.runTransaction(async (transaction) => {
+            const userDocRef = db.collection('users').doc(uid);
+            const userDoc = await transaction.get(userDocRef);
 
-        if (!userDoc.exists || userDoc.data().tokens < 1) {
-            return res.status(402).json({
-                error: 'Payment Required: Insufficient tokens.'
+            if (!userDoc.exists || userDoc.data().tokens < 1) {
+                // Gunakan throw error untuk membatalkan transaksi
+                throw new Error('Insufficient tokens'); 
+            }
+            
+            // Jika token cukup, kurangi token di dalam transaksi yang sama
+            transaction.update(userDocRef, { 
+                tokens: admin.firestore.FieldValue.increment(-1) 
             });
-        }
-
-        // 3. Deduct token
-        await userDocRef.update({
-            tokens: admin.firestore.FieldValue.increment(-1)
         });
 
         // 4. Get data from client request
@@ -203,16 +206,26 @@ module.exports = async (req, res) => {
             base64Data
         });
 
-    } catch (error) {
-        console.error("Error processing generate-image request:", error);
-        // Attempt to refund token if a user was identified before the error
-        if (error.uid) {
-            const userDocRef = db.collection('users').doc(error.uid);
-            await userDocRef.update({ tokens: admin.firestore.FieldValue.increment(1) });
-        }
-        res.status(500).json({
-            error: 'Internal Server Error',
-            details: error.message
-        });
+        } catch (error) {
+            console.error("Error processing generate-image request:", error);
+    
+            // Jika errornya karena token tidak cukup (dari dalam transaksi)
+            if (error.message === 'Insufficient tokens') {
+                return res.status(402).json({ error: 'Payment Required: Insufficient tokens.' });
+            }
+    
+            // Refund token jika error terjadi SETELAH transaksi berhasil
+            // Kita periksa apakah uid sudah ada
+            if (uid) {
+                const userDocRef = db.collection('users').doc(uid);
+                // Periksa apakah userDocRef ada sebelum mencoba mengupdate
+                const userDoc = await userDocRef.get();
+                if (userDoc.exists) {
+                    await userDocRef.update({ tokens: admin.firestore.FieldValue.increment(1) });
+                    console.log(`Token refunded for user ${uid} due to an error.`);
+                }
+            }
+            
+            res.status(500).json({ error: 'Internal Server Error', details: error.message });
     }
 };
