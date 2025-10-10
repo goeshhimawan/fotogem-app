@@ -103,7 +103,9 @@ const buildFinalPrompt = (options) => {
         if (['Solid', 'Gradient'].includes(advancedOptions.backgroundVariant)) {
             advancedPrompt += ` The primary color for the background should be around ${advancedOptions.bgColor}.`;
         }
-        advancedPrompt += ` The camera composition is a '${advancedOptions.shotType}'.`;
+        if (advancedOptions.shotType) {
+            advancedPrompt += ` The camera perspective is crucial: capture this from a '${advancedOptions.shotType}'. The camera is positioned for a '${advancedOptions.shotType}'.`;
+        }
         advancedPrompt += ` Use a '${advancedOptions.shadowStyle}'.`;
         advancedPrompt += ` Prop presence level is '${advancedOptions.propPresence}'.`;
         if (advancedOptions.customPrompt && advancedOptions.customPrompt.trim() !== '') {
