@@ -61,7 +61,7 @@ const buildFinalPrompt = (options) => {
 
     let nicheContext = detectedNiche ? `This product is in the '${detectedNiche}' category. ` : '';
     const globalSuffix = CINEMATIC_OPTICS_REALISM;
-    let basePrompt = `Generate one high-quality studio photo based on multiple reference images of the same product. Use all uploaded images collectively to preserve the true shape, color, texture, and proportions. Combine front, side, and back views coherently into a single consistent perspective. Do not invent new elements. Keep realism intact. CRUCIAL INSTRUCTION: Do NOT change the product from the original image in any way. Its color, shape, size, texture, and any logos or text must be perfectly preserved. Only change the background, lighting, and environment around the product. The final image must have a strict 1:1 square aspect ratio. ${UNIVERSAL_TEXTURE_REALISM} ${nicheContext}`;
+    let basePrompt = `Generate one high-quality studio photo based on multiple reference images of the same product. Use all uploaded images collectively to preserve the true shape, color, texture, and proportions. Use all uploaded images to understand the product's true shape, color, and texture from all sides, and then render it from the requested perspective. Do not invent new elements. Keep realism intact. CRUCIAL INSTRUCTION: Do NOT change the product from the original image in any way. Its color, shape, size, texture, and any logos or text must be perfectly preserved. Only change the background, lighting, and environment around the product. The final image must have a strict 1:1 square aspect ratio. ${UNIVERSAL_TEXTURE_REALISM} ${nicheContext}`;
 
     let stylePrompt = "";
     let modelPrompt = "";
