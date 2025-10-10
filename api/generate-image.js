@@ -46,6 +46,9 @@ const MODEL_PRESET_PROMPT_MAP = {
 
 
 // The function to build the final prompt, now running securely on the server.
+// ==================================================================
+// --- START: FUNGSI YANG DIMODIFIKASI ---
+// ==================================================================
 const buildFinalPrompt = (options) => {
     const {
         style,
@@ -63,6 +66,17 @@ const buildFinalPrompt = (options) => {
     let stylePrompt = "";
     let modelPrompt = "";
     let advancedPrompt = "";
+
+    // --- LOGIKA BARU: Deteksi override lensa di prompt kustom ---
+    let customPromptContainsLens = false;
+    if (useAdvanced && advancedOptions.customPrompt) {
+        // Regex untuk mendeteksi pola seperti "50mm", "35 mm lens", "100mm", dll.
+        const lensRegex = /\b(\d{2,3})\s*mm(\s+lens)?\b/i;
+        if (lensRegex.test(advancedOptions.customPrompt)) {
+            customPromptContainsLens = true;
+        }
+    }
+    // --- AKHIR LOGIKA BARU ---
 
     if (useModel) {
         modelPrompt += " The photo must include a human model. ";
@@ -97,11 +111,34 @@ const buildFinalPrompt = (options) => {
         }
     } else {
         if (!useModel) {
+            // Jika tidak pakai opsi lanjutan, langsung gunakan style dari map.
+            // Pengecekan lensa tidak relevan di sini karena tidak ada input kustom.
             stylePrompt = STYLE_PROMPT_MAP[style] || `The desired style is: "${style}".`;
         }
     }
+    
+    // --- LOGIKA BARU: Jika OPSI LANJUTAN AKTIF, kita tetap perlu dasar dari style yg dipilih ---
+    // Tapi kita bersihkan dulu dari potensi konflik (lensa 85mm) jika ada override.
+    if (useAdvanced && !useModel) {
+        let tempStylePrompt = STYLE_PROMPT_MAP[style] || `The desired style is: "${style}".`;
+        
+        // HANYA hapus lensa default jika prompt kustom terbukti mengandung spesifikasi lensa lain.
+        if (customPromptContainsLens) {
+            tempStylePrompt = tempStylePrompt.replace(/,?\s*85mm studio lens look/g, '');
+        }
+        
+        // stylePrompt di sini hanya berfungsi sebagai 'dasar' sebelum ditimpa oleh advancedPrompt.
+        // Kita bisa menambahkannya agar AI tetap punya konteks gaya, meski detailnya di-override.
+        // Untuk menghindari duplikasi, kita bisa buat lebih simpel.
+        // Opsi Lanjutan akan menggantikan prompt gaya, jadi kita kosongkan stylePrompt jika useAdvanced.
+    }
+
+
     return `${basePrompt} ${modelPrompt} ${stylePrompt} ${advancedPrompt} ${globalSuffix}`;
 };
+// ==================================================================
+// --- END: FUNGSI YANG DIMODIFIKASI ---
+// ==================================================================
 
 
 // --- Main Handler for the API Endpoint ---
@@ -123,7 +160,7 @@ module.exports = async (req, res) => {
             });
         }
         const decodedToken = await auth.verifyIdToken(idToken);
-        const uid = decodedToken.uid;
+        uid = decodedToken.uid; // Assign uid here
 
         // 2 & 3. Check balance and deduct token using a Transaction
         await db.runTransaction(async (transaction) => {
@@ -147,9 +184,12 @@ module.exports = async (req, res) => {
             options,
             detectedNiche
         } = req.body;
+        
+        const userDocRefForRefund = db.collection('users').doc(uid); // Define ref here for potential refunds
+
         if (!imageParts || !options) {
              // Refund token if request is malformed
-            await userDocRef.update({ tokens: admin.firestore.FieldValue.increment(1) });
+            await userDocRefForRefund.update({ tokens: admin.firestore.FieldValue.increment(1) });
             return res.status(400).json({ error: 'Bad Request: Missing image parts or options.' });
         }
         
@@ -159,16 +199,24 @@ module.exports = async (req, res) => {
 
         // 6. Call the Gemini API
         const apiKey = process.env.VITE_GEMINI_API_KEY;
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${apiKey}`;
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`; // Updated model
         const payload = {
             contents: [{
                 parts: [{
                     text: finalPrompt
                 }, ...imageParts]
             }],
-            generationConfig: {
-                responseModalities: ['IMAGE']
-            },
+            // generationConfig for image is now part of the tool definition
+            tools: [{
+                "google_search_retrieval": {}
+            }],
+            tool_config: {
+                "image_generation_config": {
+                  "number_of_images": 1,
+                  "quality": "hd", // or "standard"
+                  "aspect_ratio": "SQUARE"
+                }
+            }
         };
 
         const geminiResponse = await fetch(apiUrl, {
@@ -183,7 +231,7 @@ module.exports = async (req, res) => {
             const errorBody = await geminiResponse.json();
             console.error("Gemini API Error:", errorBody);
             // Refund token on Gemini API failure
-            await userDocRef.update({ tokens: admin.firestore.FieldValue.increment(1) });
+            await userDocRefForRefund.update({ tokens: admin.firestore.FieldValue.increment(1) });
             return res.status(500).json({ error: 'Gemini API call failed.', details: errorBody });
         }
         
@@ -191,13 +239,13 @@ module.exports = async (req, res) => {
         
         // 7. Check for safety blocks from Gemini
         if (result.promptFeedback && result.promptFeedback.blockReason) {
-             await userDocRef.update({ tokens: admin.firestore.FieldValue.increment(1) }); // Refund token
+             await userDocRefForRefund.update({ tokens: admin.firestore.FieldValue.increment(1) }); // Refund token
              return res.status(400).json({ error: `Request blocked by API: ${result.promptFeedback.blockReason}` });
         }
 
-        const base64Data = result.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
+        const base64Data = result.candidates?.[0]?.content?.parts?.find(p => p.fileData)?.fileData?.data;
         if (!base64Data) {
-            await userDocRef.update({ tokens: admin.firestore.FieldValue.increment(1) }); // Refund token
+            await userDocRefForRefund.update({ tokens: admin.firestore.FieldValue.increment(1) }); // Refund token
             return res.status(500).json({ error: 'API did not return valid image data.' });
         }
 
