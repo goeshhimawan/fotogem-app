@@ -168,11 +168,9 @@ module.exports = async (req, res) => {
             const userDoc = await transaction.get(userDocRef);
 
             if (!userDoc.exists || userDoc.data().tokens < 1) {
-                // Gunakan throw error untuk membatalkan transaksi
                 throw new Error('Insufficient tokens'); 
             }
             
-            // Jika token cukup, kurangi token di dalam transaksi yang sama
             transaction.update(userDocRef, { 
                 tokens: admin.firestore.FieldValue.increment(-1) 
             });
@@ -185,38 +183,32 @@ module.exports = async (req, res) => {
             detectedNiche
         } = req.body;
         
-        const userDocRefForRefund = db.collection('users').doc(uid); // Define ref here for potential refunds
+        const userDocRefForRefund = db.collection('users').doc(uid); 
 
         if (!imageParts || !options) {
-             // Refund token if request is malformed
             await userDocRefForRefund.update({ tokens: admin.firestore.FieldValue.increment(1) });
             return res.status(400).json({ error: 'Bad Request: Missing image parts or options.' });
         }
         
-        // 5. Build the final prompt on the server
+        // 5. Build the final prompt on the server (Ini tetap menggunakan fungsi baru kita)
         const finalPrompt = buildFinalPrompt({ ...options, detectedNiche });
-        console.log("Server-Side Final Prompt:", finalPrompt); // For debugging on Vercel logs
+        console.log("Server-Side Final Prompt:", finalPrompt);
 
-        // 6. Call the Gemini API
+        // 6. Call the Gemini API (DIKEMBALIKAN KE VERSI ASLI YANG BERFUNGSI)
         const apiKey = process.env.VITE_GEMINI_API_KEY;
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`; // Updated model
+        // Menggunakan model dan URL asli Anda
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${apiKey}`;
+        
+        // Menggunakan payload dengan "generationConfig" asli Anda
         const payload = {
             contents: [{
                 parts: [{
                     text: finalPrompt
                 }, ...imageParts]
             }],
-            // generationConfig for image is now part of the tool definition
-            tools: [{
-                "google_search_retrieval": {}
-            }],
-            tool_config: {
-                "image_generation_config": {
-                  "number_of_images": 1,
-                  "quality": "hd", // or "standard"
-                  "aspect_ratio": "SQUARE"
-                }
-            }
+            generationConfig: {
+                responseModalities: ['IMAGE']
+            },
         };
 
         const geminiResponse = await fetch(apiUrl, {
@@ -230,7 +222,6 @@ module.exports = async (req, res) => {
         if (!geminiResponse.ok) {
             const errorBody = await geminiResponse.json();
             console.error("Gemini API Error:", errorBody);
-            // Refund token on Gemini API failure
             await userDocRefForRefund.update({ tokens: admin.firestore.FieldValue.increment(1) });
             return res.status(500).json({ error: 'Gemini API call failed.', details: errorBody });
         }
@@ -239,13 +230,14 @@ module.exports = async (req, res) => {
         
         // 7. Check for safety blocks from Gemini
         if (result.promptFeedback && result.promptFeedback.blockReason) {
-             await userDocRefForRefund.update({ tokens: admin.firestore.FieldValue.increment(1) }); // Refund token
+             await userDocRefForRefund.update({ tokens: admin.firestore.FieldValue.increment(1) });
              return res.status(400).json({ error: `Request blocked by API: ${result.promptFeedback.blockReason}` });
         }
 
-        const base64Data = result.candidates?.[0]?.content?.parts?.find(p => p.fileData)?.fileData?.data;
+        // Menggunakan parser response asli Anda
+        const base64Data = result.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
         if (!base64Data) {
-            await userDocRefForRefund.update({ tokens: admin.firestore.FieldValue.increment(1) }); // Refund token
+            await userDocRefForRefund.update({ tokens: admin.firestore.FieldValue.increment(1) });
             return res.status(500).json({ error: 'API did not return valid image data.' });
         }
 
@@ -254,26 +246,22 @@ module.exports = async (req, res) => {
             base64Data
         });
 
-        } catch (error) {
-            console.error("Error processing generate-image request:", error);
+    } catch (error) {
+        console.error("Error processing generate-image request:", error);
     
-            // Jika errornya karena token tidak cukup (dari dalam transaksi)
-            if (error.message === 'Insufficient tokens') {
-                return res.status(402).json({ error: 'Payment Required: Insufficient tokens.' });
-            }
+        if (error.message === 'Insufficient tokens') {
+            return res.status(402).json({ error: 'Payment Required: Insufficient tokens.' });
+        }
     
-            // Refund token jika error terjadi SETELAH transaksi berhasil
-            // Kita periksa apakah uid sudah ada
-            if (uid) {
-                const userDocRef = db.collection('users').doc(uid);
-                // Periksa apakah userDocRef ada sebelum mencoba mengupdate
-                const userDoc = await userDocRef.get();
-                if (userDoc.exists) {
-                    await userDocRef.update({ tokens: admin.firestore.FieldValue.increment(1) });
-                    console.log(`Token refunded for user ${uid} due to an error.`);
-                }
+        if (uid) {
+            const userDocRef = db.collection('users').doc(uid);
+            const userDoc = await userDocRef.get();
+            if (userDoc.exists) {
+                await userDocRef.update({ tokens: admin.firestore.FieldValue.increment(1) });
+                console.log(`Token refunded for user ${uid} due to an error.`);
             }
-            
-            res.status(500).json({ error: 'Internal Server Error', details: error.message });
+        }
+        
+        res.status(500).json({ error: 'Internal Server Error', details: error.message });
     }
 };
