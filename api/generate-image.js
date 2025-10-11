@@ -60,19 +60,23 @@ const buildFinalPrompt = (options) => {
         advancedOptions
     } = options;
 
-    let aspectRatioInstruction = "The final image must have a strict 1:1 square aspect ratio."; // Default
+    let aspectRatioInstruction = "Generate a perfectly square image with a strict 1:1 aspect ratio."; // Default
+    let aspectRatioForCSS = "1/1"; // Untuk frontend
+
     if (useAdvanced && advancedOptions.aspectRatio) {
         switch (advancedOptions.aspectRatio) {
             case "3:4":
-                aspectRatioInstruction = "The final image must have a strict 3:4 portrait aspect ratio.";
+                aspectRatioInstruction = "CRITICAL REQUIREMENT: Generate a TALL vertical portrait image with a strict 3:4 aspect ratio.";
+                aspectRatioForCSS = "3/4";
                 break;
             case "4:3":
-                aspectRatioInstruction = "The final image must have a strict 4:3 landscape aspect ratio.";
+                aspectRatioInstruction = "CRITICAL REQUIREMENT: Generate a WIDE horizontal landscape image with a strict 4:3 aspect ratio.";
+                aspectRatioForCSS = "4/3";
                 break;
             case "16:9":
-                aspectRatioInstruction = "The final image must have a strict 16:9 widescreen landscape aspect ratio.";
+                aspectRatioInstruction = "CRITICAL REQUIREMENT: Generate a WIDESCREEN horizontal landscape image with a strict 16:9 aspect ratio.";
+                aspectRatioForCSS = "16/9";
                 break;
-            // Case "1:1" akan menggunakan default
         }
     }
 
@@ -89,8 +93,11 @@ const buildFinalPrompt = (options) => {
     }
 
     // Definisikan basePrompt TANPA info lensa.
-    let basePrompt = `Generate one high-quality studio photo, photographed with a Sony Alpha 7R V. Use all uploaded images collectively to preserve the true shape, color, texture, and proportions. Use all uploaded images to understand the product's true shape, color, and texture from all sides, and then render it from the requested perspective. Do not invent new elements. Keep realism intact. CRUCIAL INSTRUCTION: Do NOT change the product from the original image in any way. Its color, shape, size, texture, and any logos or text must be perfectly preserved. Only change the background, lighting, and environment around the product. ${aspectRatioInstruction} ${UNIVERSAL_TEXTURE_REALISM} ${nicheContext}`;
-  
+    let basePrompt = `${aspectRatioInstruction} Now, create one high-quality studio photo, photographed with a Sony Alpha 7R V. Use all uploaded images to understand the product's true shape, color, and texture from all sides, and then render it from the requested perspective. CRUCIAL INSTRUCTION: Do NOT change the product from the original image in any way. Its color, shape, size, texture, and any logos or text must be perfectly preserved. Only change the background, lighting, and environment. ${UNIVERSAL_TEXTURE_REALISM} ${nicheContext}`;
+
+    // Hapus instruksi rasio 1:1 yang mungkin masih ada dari prompt sebelumnya
+    basePrompt = basePrompt.replace("The final image must have a strict 1:1 square aspect ratio.", "");
+    
     // Tentukan prompt lensa secara dinamis.
     // Variabel ini HANYA akan diisi jika pengguna TIDAK memberikan input lensa sendiri.
     let lensPrompt = "";
