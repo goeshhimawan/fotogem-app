@@ -10,9 +10,11 @@
   },
   "dependencies": {
     "firebase-admin": "^12.0.0",
-    "firebase": "^10.7.1"
+    "firebase": "^10.7.1",
+    "sharp": "^0.33.4"
   },
   "devDependencies": {
     "vite": "^5.2.0"
   }
 }
+
