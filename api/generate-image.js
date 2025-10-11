@@ -44,6 +44,7 @@ const MODEL_PRESET_PROMPT_MAP = {
     "Creative Hero Model": `creative hero shot focusing on the product, with the full-body model in the center of the frame, high-contrast cinematic lighting. ${ULTIMATE_SKIN_AND_PHOTO_PROMPT} Studio smoke, cinematic LUT color accuracy.`
 };
 
+const NEGATIVE_PROMPT = "worst quality, low quality, blurry, pixelated, jpeg artifacts, bad anatomy, extra limbs, missing limbs, broken fingers, asymmetric face, cartoon, 3d, CGI, watermark, text, plastic skin, unnatural lighting, flat lighting, distorted eyes, warped expression, cluttered background, floating objects";
 
 // The function to build the final prompt, now running securely on the server.
 // ==================================================================
@@ -61,7 +62,7 @@ const buildFinalPrompt = (options) => {
 
     let nicheContext = detectedNiche ? `This product is in the '${detectedNiche}' category. ` : '';
     const globalSuffix = CINEMATIC_OPTICS_REALISM;
-    let basePrompt = `Generate one high-quality studio photo based on multiple reference images of the same product. Use all uploaded images collectively to preserve the true shape, color, texture, and proportions. Use all uploaded images to understand the product's true shape, color, and texture from all sides, and then render it from the requested perspective. Do not invent new elements. Keep realism intact. CRUCIAL INSTRUCTION: Do NOT change the product from the original image in any way. Its color, shape, size, texture, and any logos or text must be perfectly preserved. Only change the background, lighting, and environment around the product. The final image must have a strict 1:1 square aspect ratio. ${UNIVERSAL_TEXTURE_REALISM} ${nicheContext}`;
+    let basePrompt = `Generate one high-quality studio photo, **photographed with a Sony Alpha 7R V,** based on multiple reference images of the same product. Use all uploaded images collectively to preserve the true shape, color, texture, and proportions. Use all uploaded images to understand the product's true shape, color, and texture from all sides, and then render it from the requested perspective. Do not invent new elements. Keep realism intact. CRUCIAL INSTRUCTION: Do NOT change the product from the original image in any way. Its color, shape, size, texture, and any logos or text must be perfectly preserved. Only change the background, lighting, and environment around the product. The final image must have a strict 1:1 square aspect ratio. ${UNIVERSAL_TEXTURE_REALISM} ${nicheContext}`;
 
     let stylePrompt = "";
     let modelPrompt = "";
@@ -136,7 +137,7 @@ const buildFinalPrompt = (options) => {
     }
 
 
-    return `${basePrompt} ${modelPrompt} ${stylePrompt} ${advancedPrompt} ${globalSuffix}`;
+    return `${basePrompt} ${modelPrompt} ${stylePrompt} ${advancedPrompt} ${globalSuffix}. Negative prompt, avoid the following: ${NEGATIVE_PROMPT}`;
 };
 // ==================================================================
 // --- END: FUNGSI YANG DIMODIFIKASI ---
