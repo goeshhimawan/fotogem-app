@@ -787,6 +787,12 @@
                     beforeImageElem.src = uploadedFiles[0].objectURL;
             
                     const selectedStyleCard = document.querySelector('.style-card.selected');
+
+                     // ▼▼▼ AMBIL NILAI RASIO ASPEK UNTUK CSS ▼▼▼
+                    const selectedAspectRatio = advancedOptionsToggle.checked 
+                    ? document.getElementById('adv-aspect-ratio').value 
+                    : '1:1';
+                    
                     const options = {
                         style: selectedStyleCard ? selectedStyleCard.dataset.style : 'Classic Studio',
                         useModel: onModelToggle.checked,
@@ -919,6 +925,7 @@
     </script>
 </body>
 </html>
+
 
 
 
