@@ -46,7 +46,7 @@ const MODEL_PRESET_PROMPT_MAP = {
 
 const NEGATIVE_PROMPT = "worst quality, low quality, blurry, pixelated, jpeg artifacts, bad anatomy, extra limbs, missing limbs, broken fingers, asymmetric face, cartoon, 3d, CGI, watermark, text, plastic skin, unnatural lighting, flat lighting, distorted eyes, warped expression, cluttered background, floating objects";
 
-// The function to build the final prompt, now running securely on the server.
+
 // ==================================================================
 // --- START: FUNGSI YANG DIMODIFIKASI ---
 // ==================================================================
@@ -62,22 +62,29 @@ const buildFinalPrompt = (options) => {
 
     let nicheContext = detectedNiche ? `This product is in the '${detectedNiche}' category. ` : '';
     const globalSuffix = CINEMATIC_OPTICS_REALISM;
-    let basePrompt = `Generate one high-quality studio photo, **photographed with a Sony Alpha 7R V,** based on multiple reference images of the same product. Use all uploaded images collectively to preserve the true shape, color, texture, and proportions. Use all uploaded images to understand the product's true shape, color, and texture from all sides, and then render it from the requested perspective. Do not invent new elements. Keep realism intact. CRUCIAL INSTRUCTION: Do NOT change the product from the original image in any way. Its color, shape, size, texture, and any logos or text must be perfectly preserved. Only change the background, lighting, and environment around the product. The final image must have a strict 1:1 square aspect ratio. ${UNIVERSAL_TEXTURE_REALISM} ${nicheContext}`;
 
-    let stylePrompt = "";
-    let modelPrompt = "";
-    let advancedPrompt = "";
-
-    // --- LOGIKA BARU: Deteksi override lensa di prompt kustom ---
+    // --- LOGIKA OVERRIDE Lensa ---
     let customPromptContainsLens = false;
     if (useAdvanced && advancedOptions.customPrompt) {
-        // Regex untuk mendeteksi pola seperti "50mm", "35 mm lens", "100mm", dll.
         const lensRegex = /\b(\d{2,3})\s*mm(\s+lens)?\b/i;
         if (lensRegex.test(advancedOptions.customPrompt)) {
             customPromptContainsLens = true;
         }
     }
-    // --- AKHIR LOGIKA BARU ---
+
+    // Definisikan basePrompt TANPA info lensa.
+    let basePrompt = `Generate one high-quality studio photo, photographed with a Sony Alpha 7R V. Use all uploaded images collectively to preserve the true shape, color, texture, and proportions. Use all uploaded images to understand the product's true shape, color, and texture from all sides, and then render it from the requested perspective. Do not invent new elements. Keep realism intact. CRUCIAL INSTRUCTION: Do NOT change the product from the original image in any way. Its color, shape, size, texture, and any logos or text must be perfectly preserved. Only change the background, lighting, and environment around the product. The final image must have a strict 1:1 square aspect ratio. ${UNIVERSAL_TEXTURE_REALISM} ${nicheContext}`;
+
+    // Tentukan prompt lensa secara dinamis.
+    // Variabel ini HANYA akan diisi jika pengguna TIDAK memberikan input lensa sendiri.
+    let lensPrompt = "";
+    if (!customPromptContainsLens) {
+        lensPrompt = " with a G Master 85mm F1.4 lens";
+    }
+
+    let stylePrompt = "";
+    let modelPrompt = "";
+    let advancedPrompt = "";
 
     if (useModel) {
         modelPrompt += " The photo must include a human model. ";
@@ -114,30 +121,21 @@ const buildFinalPrompt = (options) => {
         }
     } else {
         if (!useModel) {
-            // Jika tidak pakai opsi lanjutan, langsung gunakan style dari map.
-            // Pengecekan lensa tidak relevan di sini karena tidak ada input kustom.
             stylePrompt = STYLE_PROMPT_MAP[style] || `The desired style is: "${style}".`;
         }
     }
     
-    // --- LOGIKA BARU: Jika OPSI LANJUTAN AKTIF, kita tetap perlu dasar dari style yg dipilih ---
-    // Tapi kita bersihkan dulu dari potensi konflik (lensa 85mm) jika ada override.
     if (useAdvanced && !useModel) {
         let tempStylePrompt = STYLE_PROMPT_MAP[style] || `The desired style is: "${style}".`;
         
-        // HANYA hapus lensa default jika prompt kustom terbukti mengandung spesifikasi lensa lain.
         if (customPromptContainsLens) {
+            // Logika ini masih relevan untuk menghapus lensa default dari style prompt jika ada.
             tempStylePrompt = tempStylePrompt.replace(/,?\s*85mm studio lens look/g, '');
         }
-        
-        // stylePrompt di sini hanya berfungsi sebagai 'dasar' sebelum ditimpa oleh advancedPrompt.
-        // Kita bisa menambahkannya agar AI tetap punya konteks gaya, meski detailnya di-override.
-        // Untuk menghindari duplikasi, kita bisa buat lebih simpel.
-        // Opsi Lanjutan akan menggantikan prompt gaya, jadi kita kosongkan stylePrompt jika useAdvanced.
     }
 
-
-    return `${basePrompt} ${modelPrompt} ${stylePrompt} ${advancedPrompt} ${globalSuffix}. Negative prompt, avoid the following: ${NEGATIVE_PROMPT}`;
+    // Gabungkan semuanya di akhir, termasuk lensPrompt yang dinamis.
+    return `${basePrompt}${lensPrompt} ${modelPrompt} ${stylePrompt} ${advancedPrompt} ${globalSuffix}. Negative prompt, avoid the following: ${NEGATIVE_PROMPT}`;
 };
 // ==================================================================
 // --- END: FUNGSI YANG DIMODIFIKASI ---
@@ -199,10 +197,8 @@ module.exports = async (req, res) => {
 
         // 6. Call the Gemini API (DIKEMBALIKAN KE VERSI ASLI YANG BERFUNGSI)
         const apiKey = process.env.VITE_GEMINI_API_KEY;
-        // Menggunakan model dan URL asli Anda
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${apiKey}`;
         
-        // Menggunakan payload dengan "generationConfig" asli Anda
         const payload = {
             contents: [{
                 parts: [{
@@ -237,7 +233,6 @@ module.exports = async (req, res) => {
              return res.status(400).json({ error: `Request blocked by API: ${result.promptFeedback.blockReason}` });
         }
 
-        // Menggunakan parser response asli Anda
         const base64Data = result.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
         if (!base64Data) {
             await userDocRefForRefund.update({ tokens: admin.firestore.FieldValue.increment(1) });
