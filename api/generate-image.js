@@ -60,6 +60,22 @@ const buildFinalPrompt = (options) => {
         advancedOptions
     } = options;
 
+    let aspectRatioInstruction = "The final image must have a strict 1:1 square aspect ratio."; // Default
+    if (useAdvanced && advancedOptions.aspectRatio) {
+        switch (advancedOptions.aspectRatio) {
+            case "3:4":
+                aspectRatioInstruction = "The final image must have a strict 3:4 portrait aspect ratio.";
+                break;
+            case "4:3":
+                aspectRatioInstruction = "The final image must have a strict 4:3 landscape aspect ratio.";
+                break;
+            case "16:9":
+                aspectRatioInstruction = "The final image must have a strict 16:9 widescreen landscape aspect ratio.";
+                break;
+            // Case "1:1" akan menggunakan default
+        }
+    }
+
     let nicheContext = detectedNiche ? `This product is in the '${detectedNiche}' category. ` : '';
     const globalSuffix = CINEMATIC_OPTICS_REALISM;
 
@@ -73,8 +89,8 @@ const buildFinalPrompt = (options) => {
     }
 
     // Definisikan basePrompt TANPA info lensa.
-    let basePrompt = `Generate one high-quality studio photo, photographed with a Sony Alpha 7R V. Use all uploaded images collectively to preserve the true shape, color, texture, and proportions. Use all uploaded images to understand the product's true shape, color, and texture from all sides, and then render it from the requested perspective. Do not invent new elements. Keep realism intact. CRUCIAL INSTRUCTION: Do NOT change the product from the original image in any way. Its color, shape, size, texture, and any logos or text must be perfectly preserved. Only change the background, lighting, and environment around the product. The final image must have a strict 1:1 square aspect ratio. ${UNIVERSAL_TEXTURE_REALISM} ${nicheContext}`;
-
+    let basePrompt = `Generate one high-quality studio photo, photographed with a Sony Alpha 7R V. Use all uploaded images collectively to preserve the true shape, color, texture, and proportions. Use all uploaded images to understand the product's true shape, color, and texture from all sides, and then render it from the requested perspective. Do not invent new elements. Keep realism intact. CRUCIAL INSTRUCTION: Do NOT change the product from the original image in any way. Its color, shape, size, texture, and any logos or text must be perfectly preserved. Only change the background, lighting, and environment around the product. ${aspectRatioInstruction} ${UNIVERSAL_TEXTURE_REALISM} ${nicheContext}`;
+  
     // Tentukan prompt lensa secara dinamis.
     // Variabel ini HANYA akan diisi jika pengguna TIDAK memberikan input lensa sendiri.
     let lensPrompt = "";
