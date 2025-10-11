@@ -842,6 +842,25 @@
             
                     // 4. Display the result.
                     afterImageElem.src = `data:image/png;base64,${result.base64Data}`;
+
+                    // ==================================================================
+                    // ▼▼▼ TAMBAHKAN KODE BARU UNTUK MENYESUAIKAN TAMPILAN ▼▼▼
+                    // ==================================================================
+                    const slider = document.querySelector('.comparison-slider');
+                    slider.classList.remove('aspect-square'); // Hapus class default
+                    
+                    let cssAspectRatio;
+                    switch (selectedAspectRatio) {
+                        case '3:4': cssAspectRatio = '3 / 4'; break;
+                        case '4:3': cssAspectRatio = '4 / 3'; break;
+                        case '16:9': cssAspectRatio = '16 / 9'; break;
+                        default: cssAspectRatio = '1 / 1';
+                    }
+                    slider.style.aspectRatio = cssAspectRatio;
+                    // ==================================================================
+                    // ▲▲▲ AKHIR DARI KODE BARU ▲▲▲
+                    // ==================================================================
+
                     processingView.classList.add('hidden');
                     resultView.classList.remove('hidden');
                     
@@ -900,6 +919,7 @@
     </script>
 </body>
 </html>
+
 
 
 
