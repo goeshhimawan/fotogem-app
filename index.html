@@ -149,7 +149,24 @@
                     <div class="mt-8">
                         <div class="w-full flex justify-between items-center text-left p-3 bg-gray-100 rounded-lg"><span class="font-semibold text-lg">Opsi Lanjutan (Kontrol Manual)</span><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="advanced-options-toggle" class="sr-only peer"><div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div></label></div>
                         <div id="accordion-content" class="hidden mt-4 space-y-6 p-6 border border-gray-200 rounded-lg transition-opacity duration-300 opacity-50">
-                            <fieldset id="advanced-options-fieldset" disabled><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"><div><label class="font-medium text-sm">Suasana Pencahayaan</label><select id="adv-lighting-mood" class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="Neutral Bright">Cerah Netral</option><option value="Warm Soft">Hangat Lembut</option><option value="Cool Tone">Nuansa Dingin</option><option value="Dramatic Contrast">Kontras Dramatis</option><option value="Diffused Ambient">Cahaya Menyebar</option></select></div><div><label class="font-medium text-sm">Varian Latar</label><select id="adv-background-variant" class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="Solid">Warna Polos</option><option value="Gradient">Gradasi</option><option value="Textured">Bertekstur</option><option value="Environmental Blur">Latar Blur</option></select></div><div id="adv-bg-color-container"><label class="font-medium text-sm">Warna Aksen/Latar</label><div class="flex items-center mt-1"><input type="color" id="adv-bg-color-picker" value="#FFFFFF" class="w-10 h-10 rounded-md border border-gray-300 cursor-pointer"><input type="text" id="adv-bg-color-hex" value="#FFFFFF" class="w-full ml-2 p-2 border border-gray-300 rounded-md"></div></div><div><label class="font-medium text-sm">Jenis Shot (Komposisi)</label><select id="adv-shot-type" class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="Mid Shot">Shot Menengah</option><option value="Close-Up">Close-Up</option><option value="Full Shot">Shot Penuh</option><option value="Angled Shot">Shot Sudut</option><option value="Top View / Flatlay">Tampak Atas / Flatlay</option></select></div><div><label class="font-medium text-sm">Gaya Bayangan</label><select id="adv-shadow-style" class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="Soft Shadow">Bayangan Halus</option><option value="Hard Shadow">Bayangan Tegas</option><option value="No Shadow">Tanpa Bayangan</option><option value="Reflected Shadow">Bayangan Refleksi</option></select></div><div><label class="font-medium text-sm">Kehadiran Properti</label><select id="adv-prop-presence" class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="Minimal">Minimal</option><option value="Moderate">Sedang</option><option value="Storytelling">Storytelling</option></select></div></div><div class="mt-6"><label for="adv-custom-prompt" class="font-medium text-sm">Instruksi Tambahan (Prompt Kustom)</label><textarea id="adv-custom-prompt" class="w-full mt-1 p-2 border border-gray-300 rounded-md h-20" placeholder="contoh: tambahkan percikan air, buat produk terlihat basah"></textarea></div></fieldset>
+                            <fieldset id="advanced-options-fieldset" disabled><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <div><label class="font-medium text-sm">Suasana Pencahayaan</label><select id="adv-lighting-mood" class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="Neutral Bright">Cerah Netral</option><option value="Warm Soft">Hangat Lembut</option><option value="Cool Tone">Nuansa Dingin</option><option value="Dramatic Contrast">Kontras Dramatis</option><option value="Diffused Ambient">Cahaya Menyebar</option></select></div>
+                                <div><label class="font-medium text-sm">Varian Latar</label><select id="adv-background-variant" class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="Solid">Warna Polos</option><option value="Gradient">Gradasi</option><option value="Textured">Bertekstur</option><option value="Environmental Blur">Latar Blur</option></select></div>
+                                <div id="adv-bg-color-container"><label class="font-medium text-sm">Warna Aksen/Latar</label><div class="flex items-center mt-1"><input type="color" id="adv-bg-color-picker" value="#FFFFFF" class="w-10 h-10 rounded-md border border-gray-300 cursor-pointer"><input type="text" id="adv-bg-color-hex" value="#FFFFFF" class="w-full ml-2 p-2 border border-gray-300 rounded-md"></div></div>
+                                <div><label class="font-medium text-sm">Jenis Shot (Komposisi)</label><select id="adv-shot-type" class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="Mid Shot">Shot Menengah</option><option value="Close-Up">Close-Up</option><option value="Full Shot">Shot Penuh</option><option value="Angled Shot">Shot Sudut</option><option value="Top View / Flatlay">Tampak Atas / Flatlay</option></select></div><div><label class="font-medium text-sm">Gaya Bayangan</label><select id="adv-shadow-style" class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="Soft Shadow">Bayangan Halus</option><option value="Hard Shadow">Bayangan Tegas</option><option value="No Shadow">Tanpa Bayangan</option><option value="Reflected Shadow">Bayangan Refleksi</option></select></div>
+
+                                <div>
+                                    <label class="font-medium text-sm">Rasio Aspek Gambar</label>
+                                    <select id="adv-aspect-ratio" class="w-full mt-1 p-2 border border-gray-300 rounded-md">
+                                        <option value="1:1">1:1 (Persegi)</option>
+                                        <option value="3:4">3:4 (Potret)</option>
+                                        <option value="4:3">4:3 (Lanskap)</option>
+                                        <option value="16:9">16:9 (Layar Lebar)</option>
+                                    </select>
+                                </div>
+                                
+                                <div><label class="font-medium text-sm">Kehadiran Properti</label><select id="adv-prop-presence" class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="Minimal">Minimal</option><option value="Moderate">Sedang</option><option value="Storytelling">Storytelling</option></select></div></div>
+                                <div class="mt-6"><label for="adv-custom-prompt" class="font-medium text-sm">Instruksi Tambahan (Prompt Kustom)</label><textarea id="adv-custom-prompt" class="w-full mt-1 p-2 border border-gray-300 rounded-md h-20" placeholder="contoh: tambahkan percikan air, buat produk terlihat basah"></textarea></div></fieldset>
                         </div>
                     </div>
 
@@ -793,7 +810,8 @@
                             shotType: document.getElementById('adv-shot-type').value,
                             shadowStyle: document.getElementById('adv-shadow-style').value,
                             propPresence: document.getElementById('adv-prop-presence').value,
-                            customPrompt: document.getElementById('adv-custom-prompt').value
+                            customPrompt: document.getElementById('adv-custom-prompt').value,
+                            aspectRatio: document.getElementById('adv-aspect-ratio').value
                         }
                     };
                     
@@ -882,6 +900,7 @@
     </script>
 </body>
 </html>
+
 
 
 
