@@ -47,11 +47,9 @@ const MODEL_PRESET_PROMPT_MAP = {
 
 const NEGATIVE_PROMPT = "worst quality, low quality, blurry, pixelated, jpeg artifacts, bad anatomy, extra limbs, missing limbs, broken fingers, asymmetric face, cartoon, 3d, CGI, watermark, text, plastic skin, unnatural lighting, flat lighting, distorted eyes, warped expression, cluttered background, floating objects";
 
-// Fungsi ini membangun prompt teks untuk AI
 const buildFinalPrompt = (options) => {
     const { style, detectedNiche, useModel, modelOptions, useAdvanced, advancedOptions } = options;
     
-    // Instruksi rasio di dalam prompt tetap penting sebagai sinyal tambahan untuk AI
     let aspectRatioInstruction = "The final image MUST be a perfectly square 1:1 aspect ratio image.";
     if (useAdvanced && advancedOptions.aspectRatio) {
         switch (advancedOptions.aspectRatio) {
@@ -78,13 +76,44 @@ const buildFinalPrompt = (options) => {
     let stylePrompt = "", modelPrompt = "", advancedPrompt = "";
 
     if (useModel) {
-        // ... (logika untuk model)
+        modelPrompt += " The photo must include a human model. ";
+        if (modelOptions.preset !== 'Manual Control') {
+            modelPrompt += MODEL_PRESET_PROMPT_MAP[modelOptions.preset] || '';
+        } else {
+            modelPrompt += ` ${ULTIMATE_SKIN_AND_PHOTO_PROMPT} `;
+            if (modelOptions.gender !== 'Auto Detect') modelPrompt += `Gender: ${modelOptions.gender}. `;
+            if (modelOptions.age !== 'Random') modelPrompt += `Age: ${modelOptions.age}. `;
+            if (modelOptions.ethnicity !== 'Random') modelPrompt += `Ethnicity: ${modelOptions.ethnicity}. `;
+            if (modelOptions.skinTone !== 'Random') modelPrompt += `Skin Tone: ${modelOptions.skinTone}. `;
+            if (modelOptions.outfit !== 'Random') modelPrompt += `Outfit: ${modelOptions.outfit}. `;
+            if (modelOptions.pose !== 'Random') modelPrompt += `Pose: ${modelOptions.pose}. `;
+            if (modelOptions.expression !== 'Random') modelPrompt += `Expression: ${modelOptions.expression}. `;
+            modelPrompt += `Camera Focus: ${modelOptions.focus}. `;
+            modelPrompt += `Makeup: ${modelOptions.makeup}. `;
+        }
     }
 
     if (useAdvanced) {
-        // ... (logika untuk opsi lanjutan)
-    } else if (!useModel) {
+        advancedPrompt = ` The lighting mood is '${advancedOptions.lightingMood}'.`;
+        advancedPrompt += ` The background is a '${advancedOptions.backgroundVariant}' type.`;
+        if (['Solid', 'Gradient'].includes(advancedOptions.backgroundVariant)) {
+            advancedPrompt += ` The primary color for the background should be around ${advancedOptions.bgColor}.`;
+        }
+        if (advancedOptions.shotType) {
+            advancedPrompt += ` The camera perspective is crucial: capture this from a '${advancedOptions.shotType}'.`;
+        }
+        advancedPrompt += ` Use a '${advancedOptions.shadowStyle}'.`;
+        advancedPrompt += ` Prop presence level is '${advancedOptions.propPresence}'.`;
+        if (advancedOptions.customPrompt && advancedOptions.customPrompt.trim() !== '') {
+            advancedPrompt += ` Additional user instructions: ${advancedOptions.customPrompt}.`;
+        }
+    }
+
+    if (!useModel) {
         stylePrompt = STYLE_PROMPT_MAP[style] || `The desired style is: "${style}".`;
+        if (useAdvanced && advancedOptions.customPrompt && customPromptContainsLens) {
+            stylePrompt = stylePrompt.replace(/,?\s*85mm studio lens look/g, '');
+        }
     }
 
     return `${basePrompt}${lensPrompt} ${modelPrompt} ${stylePrompt} ${advancedPrompt} ${globalSuffix}. Negative prompt, avoid the following: ${NEGATIVE_PROMPT}`;
@@ -124,7 +153,7 @@ module.exports = async (req, res) => {
         // ▼▼▼ LOGIKA PRE-PROCESSING: MEMPERLUAS KANVAS SEBELUM DIKIRIM KE AI ▼▼▼
         // ======================================================================
         try {
-            const targetAspectRatio = options?.advancedOptions?.aspectRatio || '1:1';
+            const targetAspectRatio = (options.useAdvanced && options.advancedOptions.aspectRatio) ? options.advancedOptions.aspectRatio : '1:1';
             const [ratioNum, ratioDen] = targetAspectRatio.split(':').map(Number);
             const requestedRatio = ratioNum / ratioDen;
 
