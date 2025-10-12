@@ -3,7 +3,6 @@ const admin = require('firebase-admin');
 const sharp = require('sharp'); // Impor library sharp
 
 // --- Initialize Firebase Admin SDK ---
-// This is used for secure server-side operations like token validation and database access.
 const privateKey = process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n');
 if (!admin.apps.length) {
   admin.initializeApp({
@@ -18,8 +17,6 @@ const db = admin.firestore();
 const auth = admin.auth();
 
 // --- SECRET PROMPT ENGINEERING LOGIC ---
-// This section is now secure on the server and invisible to users.
-
 const ULTIMATE_SKIN_AND_PHOTO_PROMPT = "Create a hyperrealistic professional photograph. Render natural human skin with extreme fidelity. Every micro-detail is crucial: visible pores, fine micro-wrinkles, subtle blemishes, and barely perceptible vellus hair (peach fuzz) must be present. Preserve all natural micro-textures and skin grain, including subtle shadows in skin creases. The skin's coloration must be authentic, showing natural variations and slight, realistic color unevenness. Master the physics of light on skin: highlight its natural diffusion and translucency (subsurface scattering), and render the natural gloss from skin oil. CRUCIAL: Absolutely no airbrushing, smoothing, or artificial blurring. The result must be free of any plastic, doll-like, or CG look. The image should emulate a high-end camera capture: soft photographic grain, a true optical depth of field, balanced exposure tone-mapping, cinematic natural lighting, physically accurate shadow softness, and a filmic color response curve. The final output must be an unretouched, authentic photograph comparable to a high-fashion beauty campaign, use ultra-high-frequency texture synthesis, physically based rendering of skin micro-fibers, and sub-millimeter displacement mapping to reproduce true epidermal irregularities under directional lighting.";
 const UNIVERSAL_TEXTURE_REALISM = `Render all materials with physically-based accuracy. For fabrics: resolve visible weave patterns, soft wrinkles, and micro-fiber fuzz under diffused light. For glass or transparent materials: simulate refraction, edge dispersion, smudges, and balanced reflection. For liquids: show correct meniscus curve, droplet specularity, and thin film reflection. For metal: display micro-scratches, brushed texture, and soft highlight falloff. For wood or stone: preserve grain detail, micro roughness, and natural imperfections. For plastic: reproduce subtle surface gloss, edge reflection, and texture fidelity. For hair or fur: maintain directional strand detail with correct light scattering. Ensure realistic subsurface scattering, accurate specular roughness, and micro shadowing. Use physically based rendering (PBR) with high-frequency displacement mapping for all textures.`;
 const CINEMATIC_OPTICS_REALISM = `Simulate true optical camera physics: depth-of-field, chromatic aberration, realistic bokeh highlights, lens diffraction at small apertures, and accurate color bleeding between materials. Lighting must behave like a real studio with inverse-square law intensity falloff and soft diffusion shadows.`;
@@ -47,6 +44,9 @@ const MODEL_PRESET_PROMPT_MAP = {
 
 const NEGATIVE_PROMPT = "worst quality, low quality, blurry, pixelated, jpeg artifacts, bad anatomy, extra limbs, missing limbs, broken fingers, asymmetric face, cartoon, 3d, CGI, watermark, text, plastic skin, unnatural lighting, flat lighting, distorted eyes, warped expression, cluttered background, floating objects";
 
+// ======================================================================
+// ▼▼▼ FUNGSI buildFinalPrompt LENGKAP DAN SUDAH DIPERBAIKI (FINAL) ▼▼▼
+// ======================================================================
 const buildFinalPrompt = (options) => {
     const { style, detectedNiche, useModel, modelOptions, useAdvanced, advancedOptions } = options;
     
@@ -70,7 +70,18 @@ const buildFinalPrompt = (options) => {
         }
     }
 
-    let basePrompt = `${aspectRatioInstruction} Now, create one high-quality studio photo, photographed with a Sony Alpha 7R V. Use all uploaded images to understand the product's true shape, color, and texture from all sides, and then render it from the requested perspective. CRUCIAL INSTRUCTION: Do NOT change the product from the original image in any way. Its color, shape, size, texture, and any logos or text must be perfectly preserved. Only change the background, lighting, and environment. ${UNIVERSAL_TEXTURE_REALISM} ${nicheContext}`;
+    // --- BASE PROMPT DINAMIS ---
+    let basePromptContent;
+    if (useModel) {
+        // Jika mode model aktif, instruksi ke AI adalah untuk MENGGANTI/MENAMBAH model.
+        // Produk harus tetap utuh, tetapi model boleh berubah.
+        basePromptContent = `Now, create one high-quality studio photo, photographed with a Sony Alpha 7R V. Replace the existing model (if any) or add a new human model if the product is standalone. Ensure the product (clothing/item on model) from the original image is perfectly preserved: its color, shape, size, texture, and any logos or text must remain unchanged. Only the background, lighting, environment, and the human model's appearance/pose should be altered. Use all uploaded images to understand the product's true shape, color, and texture from all sides, and then render it from the requested perspective.`;
+    } else {
+        // Jika mode model tidak aktif, instruksi adalah untuk TIDAK MENGUBAH PRODUK SAMA SEKALI.
+        basePromptContent = `Now, create one high-quality studio photo, photographed with a Sony Alpha 7R V. Use all uploaded images to understand the product's true shape, color, and texture from all sides, and then render it from the requested perspective. CRUCIAL INSTRUCTION: Do NOT change the product from the original image in any way. Its color, shape, size, texture, and any logos or text must be perfectly preserved. Only change the background, lighting, and environment.`;
+    }
+    let basePrompt = `${aspectRatioInstruction} ${basePromptContent} ${UNIVERSAL_TEXTURE_REALISM} ${nicheContext}`;
+    // --- AKHIR BASE PROMPT DINAMIS ---
     
     let lensPrompt = customPromptContainsLens ? "" : " with a G Master 85mm F1.4 lens";
     let stylePrompt = "", modelPrompt = "", advancedPrompt = "";
@@ -109,8 +120,10 @@ const buildFinalPrompt = (options) => {
         }
     }
 
+    // Style prompt hanya diterapkan jika mode Model TIDAK aktif
     if (!useModel) {
         stylePrompt = STYLE_PROMPT_MAP[style] || `The desired style is: "${style}".`;
+        // Handle override lensa jika custom prompt di advanced options mengandung lensa
         if (useAdvanced && advancedOptions.customPrompt && customPromptContainsLens) {
             stylePrompt = stylePrompt.replace(/,?\s*85mm studio lens look/g, '');
         }
@@ -118,6 +131,9 @@ const buildFinalPrompt = (options) => {
 
     return `${basePrompt}${lensPrompt} ${modelPrompt} ${stylePrompt} ${advancedPrompt} ${globalSuffix}. Negative prompt, avoid the following: ${NEGATIVE_PROMPT}`;
 };
+// ======================================================================
+// ▲▲▲ AKHIR DARI FUNGSI buildFinalPrompt LENGKAP DAN SUDAH DIPERBAIKI (FINAL) ▲▲▲
+// ======================================================================
 
 // --- Main Handler for the API Endpoint ---
 module.exports = async (req, res) => {
@@ -155,7 +171,7 @@ module.exports = async (req, res) => {
         try {
             const targetAspectRatio = (options.useAdvanced && options.advancedOptions.aspectRatio) ? options.advancedOptions.aspectRatio : '1:1';
             const [ratioNum, ratioDen] = targetAspectRatio.split(':').map(Number);
-            const requestedRatio = ratioNum / ratioDen;
+            const requestedRatio = ratioNum / den;
 
             // Proses hanya gambar utama (pertama)
             const mainImagePart = imageParts[0];
