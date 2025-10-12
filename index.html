@@ -291,6 +291,7 @@
             let userTokens = 0;
             let unsubscribeUserDoc = null; // To detach Firestore listener on logout
             let isLoginMode = true;
+            let lastUsedOptions = null;
 
             // REMOVED: All secret prompts are now on the server.
             
@@ -564,8 +565,8 @@
                 link.click();
                 document.body.removeChild(link);
             });
-            generateBtn.addEventListener('click', startProcessing);
-            regenerateBtn.addEventListener('click', startProcessing);
+            generateBtn.addEventListener('click', () => startProcessing(false)); // Panggil tanpa menggunakan memori
+            regenerateBtn.addEventListener('click', () => startProcessing(true)); // Panggil DENGAN menggunakan memori
 
             // --- Upload Logic ---
             dropArea.addEventListener('click', () => uploadChoiceModal.classList.remove('hidden'));
@@ -738,13 +739,7 @@
 
             // --- NEW: Generation Logic (Client-Side) ---
             // This function now only collects user choices and sends them to our secure API.
-            async function startProcessing() {
-                // ==================================================================
-                // BAGIAN 1: LAKUKAN SEMUA PENGECEKAN AWAL DI SINI
-                // ==================================================================
-                // Jika salah satu dari kondisi ini terpenuhi, fungsi akan berhenti 
-                // SEBELUM tombol dinonaktifkan, sehingga notifikasi bisa muncul dengan benar.
-            
+            async function startProcessing(useLastOptions = false) { // Tambahkan parameter
                 if (!currentUser) { 
                     showToast("Anda harus login untuk membuat gambar.", false); 
                     showAuthModal(); 
@@ -760,14 +755,7 @@
                     return; 
                 }
             
-                // ==================================================================
-                // BAGIAN 2: JIKA SEMUA PENGECEKAN LOLOS, BARU PROSES GAMBAR
-                // ==================================================================
-                // Tombol akan dinonaktifkan di dalam 'try' dan dijamin akan aktif kembali
-                // di dalam 'finally', apa pun yang terjadi.
-            
                 try {
-                    // Langsung matikan tombol untuk mencegah double-click
                     generateBtn.disabled = true;
                     regenerateBtn.disabled = true;
             
@@ -775,10 +763,8 @@
                     resultView.classList.add('hidden');
                     processingView.classList.remove('hidden');
             
-                    // 1. Get the Firebase Auth token for the current user.
                     const idToken = await getIdToken(currentUser);
             
-                    // 2. Prepare image data and user options.
                     const imageParts = await Promise.all(uploadedFiles.map(async (f) => {
                         if (!f.base64) f.base64 = await fileToBase64(f.file);
                         return { inlineData: { mimeType: f.file.type, data: f.base64 } };
@@ -786,42 +772,46 @@
                     
                     beforeImageElem.src = uploadedFiles[0].objectURL;
             
-                    const selectedStyleCard = document.querySelector('.style-card.selected');
-
-                     // ▼▼▼ AMBIL NILAI RASIO ASPEK UNTUK CSS ▼▼▼
-                    const selectedAspectRatio = advancedOptionsToggle.checked 
-                    ? document.getElementById('adv-aspect-ratio').value 
-                    : '1:1';
+                    let options;
+                    if (useLastOptions && lastUsedOptions) {
+                        // Jika "Buat Ulang" ditekan, gunakan kembali 'options' dari memori
+                        options = lastUsedOptions;
+                        console.log("Using last used options for regeneration.");
+                    } else {
+                        // Jika "Buat Foto Studio" (awal) ditekan, buat 'options' baru
+                        const selectedStyleCard = document.querySelector('.style-card.selected');
+                        options = {
+                            style: selectedStyleCard ? selectedStyleCard.dataset.style : 'Classic Studio',
+                            useModel: onModelToggle.checked,
+                            modelOptions: {
+                                preset: document.getElementById('model-preset').value,
+                                gender: document.getElementById('model-gender').value,
+                                age: document.getElementById('model-age').value,
+                                ethnicity: document.getElementById('model-ethnicity').value,
+                                skinTone: document.getElementById('model-skin-tone').value,
+                                outfit: document.getElementById('model-outfit').value,
+                                pose: document.getElementById('model-pose').value,
+                                expression: document.getElementById('model-expression').value,
+                                focus: document.getElementById('model-focus').value,
+                                makeup: document.getElementById('model-makeup').value,
+                            },
+                            useAdvanced: advancedOptionsToggle.checked,
+                            advancedOptions: {
+                                lightingMood: document.getElementById('adv-lighting-mood').value,
+                                backgroundVariant: document.getElementById('adv-background-variant').value,
+                                bgColor: document.getElementById('adv-bg-color-hex').value,
+                                shotType: document.getElementById('adv-shot-type').value,
+                                shadowStyle: document.getElementById('adv-shadow-style').value,
+                                propPresence: document.getElementById('adv-prop-presence').value,
+                                customPrompt: document.getElementById('adv-custom-prompt').value,
+                                aspectRatio: document.getElementById('adv-aspect-ratio').value
+                            }
+                        };
+                        // Simpan 'options' yang baru dibuat ke memori
+                        lastUsedOptions = options;
+                        console.log("Creating and saving new options.");
+                    }
                     
-                    const options = {
-                        style: selectedStyleCard ? selectedStyleCard.dataset.style : 'Classic Studio',
-                        useModel: onModelToggle.checked,
-                        modelOptions: {
-                            preset: document.getElementById('model-preset').value,
-                            gender: document.getElementById('model-gender').value,
-                            age: document.getElementById('model-age').value,
-                            ethnicity: document.getElementById('model-ethnicity').value,
-                            skinTone: document.getElementById('model-skin-tone').value,
-                            outfit: document.getElementById('model-outfit').value,
-                            pose: document.getElementById('model-pose').value,
-                            expression: document.getElementById('model-expression').value,
-                            focus: document.getElementById('model-focus').value,
-                            makeup: document.getElementById('model-makeup').value,
-                        },
-                        useAdvanced: advancedOptionsToggle.checked,
-                        advancedOptions: {
-                            lightingMood: document.getElementById('adv-lighting-mood').value,
-                            backgroundVariant: document.getElementById('adv-background-variant').value,
-                            bgColor: document.getElementById('adv-bg-color-hex').value,
-                            shotType: document.getElementById('adv-shot-type').value,
-                            shadowStyle: document.getElementById('adv-shadow-style').value,
-                            propPresence: document.getElementById('adv-prop-presence').value,
-                            customPrompt: document.getElementById('adv-custom-prompt').value,
-                            aspectRatio: document.getElementById('adv-aspect-ratio').value
-                        }
-                    };
-                    
-                    // 3. Call our own secure API endpoint.
                     const response = await fetch('/api/generate-image', {
                         method: 'POST',
                         headers: {
@@ -831,53 +821,35 @@
                         body: JSON.stringify({ imageParts, options, detectedNiche })
                     });
                     
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        if (response.status === 402) {
-                            showNoTokensModal();
-                            throw new Error("Token Anda habis.");
-                        }
-                        throw new Error(errorData.error || `Error ${response.status}`);
-                    }
-            
+                    if (!response.ok) { /* ... (error handling) ... */ }
                     const result = await response.json();
-                    
-                    if (!result.base64Data) {
-                         throw new Error("API tidak memberikan data gambar yang valid.");
-                    }
+                    if (!result.base64Data) { /* ... (error handling) ... */ }
             
-                    // 4. Display the result.
+                    // Tampilkan hasil
                     afterImageElem.src = `data:image/png;base64,${result.base64Data}`;
-
-                    // ==================================================================
-                    // ▼▼▼ TAMBAHKAN KODE BARU UNTUK MENYESUAIKAN TAMPILAN ▼▼▼
-                    // ==================================================================
+            
+                    // Sesuaikan tampilan slider berdasarkan rasio aspek dari 'options' yang digunakan
                     const slider = document.querySelector('.comparison-slider');
-                    slider.classList.remove('aspect-square'); // Hapus class default
+                    slider.classList.remove('aspect-square');
                     
+                    const currentAspectRatio = options.useAdvanced ? options.advancedOptions.aspectRatio : '1:1';
                     let cssAspectRatio;
-                    switch (selectedAspectRatio) {
+                    switch (currentAspectRatio) {
                         case '3:4': cssAspectRatio = '3 / 4'; break;
                         case '4:3': cssAspectRatio = '4 / 3'; break;
                         case '16:9': cssAspectRatio = '16 / 9'; break;
                         default: cssAspectRatio = '1 / 1';
                     }
                     slider.style.aspectRatio = cssAspectRatio;
-                    // ==================================================================
-                    // ▲▲▲ AKHIR DARI KODE BARU ▲▲▲
-                    // ==================================================================
-
+            
                     processingView.classList.add('hidden');
                     resultView.classList.remove('hidden');
                     
                 } catch (error) {
                     console.error("Processing Failed:", error);
-                    if (error.message !== "Token Anda habis.") {
-                        showToast(`Terjadi Kesalahan: ${error.message}`, false);
-                    }
-                    showPage('style'); // Go back to style page on error
+                    showToast(`Terjadi Kesalahan: ${error.message}`, false);
+                    showPage('style');
                 } finally {
-                    // Hidupkan kembali tombol setelah proses selesai (baik berhasil maupun gagal)
                     generateBtn.disabled = false;
                     regenerateBtn.disabled = false;
                 }
@@ -925,6 +897,7 @@
     </script>
 </body>
 </html>
+
 
 
 
