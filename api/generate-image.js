@@ -45,9 +45,6 @@ const MODEL_PRESET_PROMPT_MAP = {
 const NEGATIVE_PROMPT = "worst quality, low quality, blurry, pixelated, jpeg artifacts, bad anatomy, extra limbs, missing limbs, broken fingers, asymmetric face, cartoon, 3d, CGI, watermark, text, plastic skin, unnatural lighting, flat lighting, distorted eyes, warped expression, cluttered background, floating objects";
 
 
-// ======================================================================
-// ▼▼▼ FUNGSI buildFinalPrompt DENGAN LOGIKA YANG BENAR DAN LENGKAP ▼▼▼
-// ======================================================================
 const buildFinalPrompt = (options) => {
     const { style, detectedNiche, useModel, modelOptions, useAdvanced, advancedOptions } = options;
     
@@ -71,7 +68,6 @@ const buildFinalPrompt = (options) => {
         }
     }
 
-    // --- BASE PROMPT DINAMIS BERDASARKAN useModel ---
     let basePromptContent;
     if (useModel) {
         basePromptContent = `Now, create one high-quality photo. Replace the existing model (if any) or add a new human model if the product is standalone. Ensure the product (clothing/item on model) from the original image is perfectly preserved: its color, shape, size, texture, and any logos or text must remain unchanged. Only the background, lighting, environment, and the human model's appearance/pose should be altered. Use all uploaded images to understand the product's true details.`;
@@ -84,21 +80,24 @@ const buildFinalPrompt = (options) => {
     let stylePrompt = "", modelPrompt = "", advancedPrompt = "";
 
     // --- LOGIKA BARU YANG BENAR ---
-    // 1. Ambil Gaya Studio sebagai dasar. Ini SELALU ada.
     stylePrompt = STYLE_PROMPT_MAP[style] || `The desired style is: "${style}".`;
     
-    // 2. Jika 'useModel' aktif, siapkan prompt untuk model.
     if (useModel) {
         modelPrompt += " The photo must include a human model. ";
+        
+        // SELALU tambahkan detail demografis (gender, usia, dll.)
+        if (modelOptions.gender !== 'Auto Detect') modelPrompt += `The model must be ${modelOptions.gender}. `;
+        if (modelOptions.age !== 'Random') modelPrompt += `The model's age is ${modelOptions.age}. `;
+        if (modelOptions.ethnicity !== 'Random') modelPrompt += `The model's ethnicity is ${modelOptions.ethnicity}. `;
+        if (modelOptions.skinTone !== 'Random') modelPrompt += `The model's skin tone is ${modelOptions.skinTone}. `;
+        if (modelOptions.outfit !== 'Random') modelPrompt += `The model is wearing ${modelOptions.outfit}. `;
+        
+        // Tambahkan GAYA pemotretan dari Preset ATAU kontrol manual
         if (modelOptions.preset !== 'Manual Control') {
             modelPrompt += MODEL_PRESET_PROMPT_MAP[modelOptions.preset] || '';
         } else {
             modelPrompt += ` ${ULTIMATE_SKIN_AND_PHOTO_PROMPT} `;
-            if (modelOptions.gender !== 'Auto Detect') modelPrompt += `Gender: ${modelOptions.gender}. `;
-            if (modelOptions.age !== 'Random') modelPrompt += `Age: ${modelOptions.age}. `;
-            if (modelOptions.ethnicity !== 'Random') modelPrompt += `Ethnicity: ${modelOptions.ethnicity}. `;
-            if (modelOptions.skinTone !== 'Random') modelPrompt += `Skin Tone: ${modelOptions.skinTone}. `;
-            if (modelOptions.outfit !== 'Random') modelPrompt += `Outfit: ${modelOptions.outfit}. `;
+            // HANYA tambahkan detail stilistik jika dalam mode Kontrol Manual
             if (modelOptions.pose !== 'Random') modelPrompt += `Pose: ${modelOptions.pose}. `;
             if (modelOptions.expression !== 'Random') modelPrompt += `Expression: ${modelOptions.expression}. `;
             modelPrompt += `Camera Focus: ${modelOptions.focus}. `;
@@ -106,7 +105,6 @@ const buildFinalPrompt = (options) => {
         }
     }
 
-    // 3. Jika 'useAdvanced' aktif, siapkan prompt untuk override manual.
     if (useAdvanced) {
         advancedPrompt = ` The lighting mood is '${advancedOptions.lightingMood}'.`;
         advancedPrompt += ` The background is a '${advancedOptions.backgroundVariant}' type.`;
@@ -122,7 +120,6 @@ const buildFinalPrompt = (options) => {
             advancedPrompt += ` Additional user instructions: ${advancedOptions.customPrompt}.`;
         }
     }
-    // --- AKHIR LOGIKA BARU ---
 
     return `${basePrompt}${lensPrompt} ${modelPrompt} ${stylePrompt} ${advancedPrompt} ${globalSuffix}. Negative prompt, avoid the following: ${NEGATIVE_PROMPT}`;
 };
