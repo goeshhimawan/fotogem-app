@@ -44,8 +44,9 @@ const MODEL_PRESET_PROMPT_MAP = {
 
 const NEGATIVE_PROMPT = "worst quality, low quality, blurry, pixelated, jpeg artifacts, bad anatomy, extra limbs, missing limbs, broken fingers, asymmetric face, cartoon, 3d, CGI, watermark, text, plastic skin, unnatural lighting, flat lighting, distorted eyes, warped expression, cluttered background, floating objects";
 
+
 // ======================================================================
-// ▼▼▼ FUNGSI buildFinalPrompt LENGKAP DAN SUDAH DIPERBAIKI (FINAL) ▼▼▼
+// ▼▼▼ FUNGSI buildFinalPrompt DENGAN LOGIKA YANG BENAR DAN LENGKAP ▼▼▼
 // ======================================================================
 const buildFinalPrompt = (options) => {
     const { style, detectedNiche, useModel, modelOptions, useAdvanced, advancedOptions } = options;
@@ -70,22 +71,23 @@ const buildFinalPrompt = (options) => {
         }
     }
 
-    // --- BASE PROMPT DINAMIS ---
+    // --- BASE PROMPT DINAMIS BERDASARKAN useModel ---
     let basePromptContent;
     if (useModel) {
-        // Jika mode model aktif, instruksi ke AI adalah untuk MENGGANTI/MENAMBAH model.
-        // Produk harus tetap utuh, tetapi model boleh berubah.
-        basePromptContent = `Now, create one high-quality studio photo, photographed with a Sony Alpha 7R V. Replace the existing model (if any) or add a new human model if the product is standalone. Ensure the product (clothing/item on model) from the original image is perfectly preserved: its color, shape, size, texture, and any logos or text must remain unchanged. Only the background, lighting, environment, and the human model's appearance/pose should be altered. Use all uploaded images to understand the product's true shape, color, and texture from all sides, and then render it from the requested perspective.`;
+        basePromptContent = `Now, create one high-quality photo. Replace the existing model (if any) or add a new human model if the product is standalone. Ensure the product (clothing/item on model) from the original image is perfectly preserved: its color, shape, size, texture, and any logos or text must remain unchanged. Only the background, lighting, environment, and the human model's appearance/pose should be altered. Use all uploaded images to understand the product's true details.`;
     } else {
-        // Jika mode model tidak aktif, instruksi adalah untuk TIDAK MENGUBAH PRODUK SAMA SEKALI.
-        basePromptContent = `Now, create one high-quality studio photo, photographed with a Sony Alpha 7R V. Use all uploaded images to understand the product's true shape, color, and texture from all sides, and then render it from the requested perspective. CRUCIAL INSTRUCTION: Do NOT change the product from the original image in any way. Its color, shape, size, texture, and any logos or text must be perfectly preserved. Only change the background, lighting, and environment.`;
+        basePromptContent = `Now, create one high-quality studio photo. Use all uploaded images to understand the product's true shape, color, and texture from all sides. CRUCIAL INSTRUCTION: Do NOT change the product from the original image in any way. Its color, shape, size, texture, and any logos or text must be perfectly preserved. Only change the background, lighting, and environment.`;
     }
-    let basePrompt = `${aspectRatioInstruction} ${basePromptContent} ${UNIVERSAL_TEXTURE_REALISM} ${nicheContext}`;
-    // --- AKHIR BASE PROMPT DINAMIS ---
+    let basePrompt = `${aspectRatioInstruction} ${basePromptContent} Photographed with a Sony Alpha 7R V. ${UNIVERSAL_TEXTURE_REALISM} ${nicheContext}`;
     
     let lensPrompt = customPromptContainsLens ? "" : " with a G Master 85mm F1.4 lens";
     let stylePrompt = "", modelPrompt = "", advancedPrompt = "";
 
+    // --- LOGIKA BARU YANG BENAR ---
+    // 1. Ambil Gaya Studio sebagai dasar. Ini SELALU ada.
+    stylePrompt = STYLE_PROMPT_MAP[style] || `The desired style is: "${style}".`;
+    
+    // 2. Jika 'useModel' aktif, siapkan prompt untuk model.
     if (useModel) {
         modelPrompt += " The photo must include a human model. ";
         if (modelOptions.preset !== 'Manual Control') {
@@ -104,6 +106,7 @@ const buildFinalPrompt = (options) => {
         }
     }
 
+    // 3. Jika 'useAdvanced' aktif, siapkan prompt untuk override manual.
     if (useAdvanced) {
         advancedPrompt = ` The lighting mood is '${advancedOptions.lightingMood}'.`;
         advancedPrompt += ` The background is a '${advancedOptions.backgroundVariant}' type.`;
@@ -119,21 +122,11 @@ const buildFinalPrompt = (options) => {
             advancedPrompt += ` Additional user instructions: ${advancedOptions.customPrompt}.`;
         }
     }
-
-    // Style prompt hanya diterapkan jika mode Model TIDAK aktif
-    if (!useModel) {
-        stylePrompt = STYLE_PROMPT_MAP[style] || `The desired style is: "${style}".`;
-        // Handle override lensa jika custom prompt di advanced options mengandung lensa
-        if (useAdvanced && advancedOptions.customPrompt && customPromptContainsLens) {
-            stylePrompt = stylePrompt.replace(/,?\s*85mm studio lens look/g, '');
-        }
-    }
+    // --- AKHIR LOGIKA BARU ---
 
     return `${basePrompt}${lensPrompt} ${modelPrompt} ${stylePrompt} ${advancedPrompt} ${globalSuffix}. Negative prompt, avoid the following: ${NEGATIVE_PROMPT}`;
 };
-// ======================================================================
-// ▲▲▲ AKHIR DARI FUNGSI buildFinalPrompt LENGKAP DAN SUDAH DIPERBAIKI (FINAL) ▲▲▲
-// ======================================================================
+
 
 // --- Main Handler for the API Endpoint ---
 module.exports = async (req, res) => {
@@ -143,7 +136,6 @@ module.exports = async (req, res) => {
   
     let uid;
     try {
-        // 1. Otentikasi pengguna dan kurangi token
         const idToken = req.headers.authorization?.split('Bearer ')[1];
         if (!idToken) return res.status(401).json({ error: 'Unauthorized: No token provided.' });
         
@@ -157,7 +149,7 @@ module.exports = async (req, res) => {
             transaction.update(userDocRef, { tokens: admin.firestore.FieldValue.increment(-1) });
         });
         
-        let { imageParts, options, detectedNiche } = req.body; // Gunakan 'let' agar bisa diubah
+        let { imageParts, options, detectedNiche } = req.body;
         const userDocRefForRefund = db.collection('users').doc(uid);
 
         if (!imageParts || !options) {
@@ -165,15 +157,11 @@ module.exports = async (req, res) => {
             return res.status(400).json({ error: 'Bad Request: Missing image parts or options.' });
         }
         
-        // ======================================================================
-        // ▼▼▼ LOGIKA PRE-PROCESSING: MEMPERLUAS KANVAS SEBELUM DIKIRIM KE AI ▼▼▼
-        // ======================================================================
         try {
             const targetAspectRatio = (options.useAdvanced && options.advancedOptions.aspectRatio) ? options.advancedOptions.aspectRatio : '1:1';
             const [ratioNum, ratioDen] = targetAspectRatio.split(':').map(Number);
-            const requestedRatio = ratioNum / den;
+            const requestedRatio = ratioNum / ratioDen;
 
-            // Proses hanya gambar utama (pertama)
             const mainImagePart = imageParts[0];
             const imageBuffer = Buffer.from(mainImagePart.inlineData.data, 'base64');
             
@@ -184,7 +172,6 @@ module.exports = async (req, res) => {
 
             let newCanvasWidth, newCanvasHeight;
 
-            // Tentukan dimensi kanvas baru
             if (originalRatio > requestedRatio) {
                 newCanvasWidth = originalWidth;
                 newCanvasHeight = Math.round(originalWidth / requestedRatio);
@@ -193,7 +180,6 @@ module.exports = async (req, res) => {
                 newCanvasWidth = Math.round(originalHeight * requestedRatio);
             }
 
-            // Buat kanvas baru dengan latar putih dan tempelkan gambar asli di tengah
             const paddedImageBuffer = await sharp({
                 create: {
                     width: newCanvasWidth,
@@ -201,15 +187,8 @@ module.exports = async (req, res) => {
                     channels: 4,
                     background: { r: 255, g: 255, b: 255, alpha: 1 }
                 }
-            })
-            .composite([{
-                input: imageBuffer,
-                gravity: 'centre' // Letakkan gambar asli di tengah
-            }])
-            .png() // Konversi ke PNG untuk menjaga transparansi (jika ada)
-            .toBuffer();
-
-            // Ganti data gambar asli dengan gambar yang sudah diproses
+            }).composite([{ input: imageBuffer, gravity: 'centre' }]).png().toBuffer();
+            
             imageParts[0].inlineData.data = paddedImageBuffer.toString('base64');
             imageParts[0].inlineData.mimeType = 'image/png';
 
@@ -217,13 +196,8 @@ module.exports = async (req, res) => {
 
         } catch (processError) {
             console.error("Error during image pre-processing:", processError);
-            // Jika gagal, tetap lanjutkan dengan gambar asli
         }
-        // ======================================================================
-        // ▲▲▲ AKHIR DARI LOGIKA PRE-PROCESSING ▲▲▲
-        // ======================================================================
         
-        // 2. Buat prompt dan panggil API Gemini
         const finalPrompt = buildFinalPrompt({ ...options, detectedNiche });
         const apiKey = process.env.VITE_GEMINI_API_KEY;
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${apiKey}`;
@@ -240,7 +214,7 @@ module.exports = async (req, res) => {
             return res.status(500).json({ error: 'Gemini API call failed.', details: errorBody });
         }
         const result = await geminiResponse.json();
-
+        
         if (result.promptFeedback?.blockReason) {
             await userDocRefForRefund.update({ tokens: admin.firestore.FieldValue.increment(1) });
             return res.status(400).json({ error: `Request blocked by API: ${result.promptFeedback.blockReason}` });
@@ -252,7 +226,6 @@ module.exports = async (req, res) => {
             return res.status(500).json({ error: 'API did not return valid image data.' });
         }
         
-        // 3. Kirim hasil (sudah tidak perlu di-crop)
         res.status(200).json({ base64Data: base64Data });
 
     } catch (error) {
