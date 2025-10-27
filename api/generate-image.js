@@ -76,7 +76,7 @@ const buildFinalPrompt = (options) => {
 
     let basePromptContent;
     if (useModel) {
-        basePromptContent = `Now, create one high-quality photo. Replace the existing model (if any) or add a new human model if the product is standalone. Ensure the product (clothing/item on model) from the original image is perfectly preserved: its color, shape, size, texture, and any logos or text must remain unchanged. Only the background, lighting, environment, and the human model's appearance/pose should be altered. Use all uploaded images to understand the product's true details.`;
+        basePromptContent = `Now, create one high-quality photo. Replace the existing model (if any) or add a new human model if the product is standalone. Maintain the key identity and details of the product (color, main design, and branding/logo), but you may interpret the shape, pose, and perspective more freely for a fresh presentation. The product’s core look must still be clearly visible and consistent. Use all uploaded images to understand the product's true details.`;
     } else {
         basePromptContent = `Now, create one high-quality studio photo. Use all uploaded images to understand the product's true shape, color, and texture from all sides. CRUCIAL INSTRUCTION: Do NOT change the product from the original image in any way. Its color, shape, size, texture, and any logos or text must be perfectly preserved. Only change the background, lighting, and environment.`;
     }
