@@ -47,6 +47,12 @@ const NEGATIVE_PROMPT = "worst quality, low quality, blurry, pixelated, jpeg art
 
 const buildFinalPrompt = (options) => {
     const { style, detectedNiche, useModel, modelOptions, useAdvanced, advancedOptions } = options;
+
+    // --- LANGKAH 1: Ekstrak custom prompt LEBIH AWAL ---
+    const userCustomPrompt = (useAdvanced && advancedOptions.customPrompt && advancedOptions.customPrompt.trim() !== '') 
+        ? ` ${advancedOptions.customPrompt.trim()}. `  // Pastikan ada spasi
+        : ''; // Jika kosong, biarkan jadi string kosong
+    // --- SELESAI LANGKAH 1 ---
     
     let aspectRatioInstruction = "The final image MUST be a perfectly square 1:1 aspect ratio image.";
     if (useAdvanced && advancedOptions.aspectRatio) {
@@ -84,6 +90,11 @@ const buildFinalPrompt = (options) => {
     
     if (useModel) {
         modelPrompt += " The photo must include a human model. ";
+
+        // --- LANGKAH 2: Masukkan custom prompt di SINI (Prioritas Tinggi) ---
+        // Ini menggabungkan instruksi kustom Anda
+        modelPrompt += userCustomPrompt;
+        // --- SELESAI LANGKAH 2 ---
         
         // SELALU tambahkan detail demografis (gender, usia, dll.)
         if (modelOptions.gender !== 'Auto Detect') modelPrompt += `The model must be ${modelOptions.gender}. `;
@@ -116,8 +127,9 @@ const buildFinalPrompt = (options) => {
         }
         advancedPrompt += ` Use a '${advancedOptions.shadowStyle}'.`;
         advancedPrompt += ` Prop presence level is '${advancedOptions.propPresence}'.`;
-        if (advancedOptions.customPrompt && advancedOptions.customPrompt.trim() !== '') {
-            advancedPrompt += ` Additional user instructions: ${advancedOptions.customPrompt}.`;
+      
+        if (userCustomPrompt && !useModel) {
+            advancedPrompt += ` Additional user instructions:${userCustomPrompt}`;
         }
     }
 
