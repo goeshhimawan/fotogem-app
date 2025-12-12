@@ -209,7 +209,7 @@ module.exports = async (req, res) => {
         
         const finalPrompt = buildFinalPrompt({ ...options, detectedNiche });
         const apiKey = process.env.VITE_GEMINI_API_KEY;
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${apiKey}`;
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-image-preview:generateContent?key=${apiKey}`;
         const payload = { 
             contents: [{ parts: [{ text: finalPrompt }, ...imageParts] }], 
             generationConfig: { responseModalities: ['IMAGE'] } 
