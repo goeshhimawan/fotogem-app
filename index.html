@@ -611,7 +611,8 @@
                     }
                     const apiKey = "%VITE_GEMINI_API_KEY%";
                     
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                    // Menggunakan model Gemini 1.5 Flash
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
                     const prompt = `Analisis produk dalam gambar ini dan klasifikasikan ke dalam SATU dari kategori berikut: ${NICHE_CATEGORIES.join(", ")}. Balas hanya dengan nama kategori, tanpa teks atau tanda baca tambahan.`;
                     const payload = {
                         contents: [{
@@ -897,6 +898,7 @@
     </script>
 </body>
 </html>
+
 
 
 
